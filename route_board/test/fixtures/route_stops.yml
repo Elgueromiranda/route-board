@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  route: one
+  stop: one
+  sequence_order: 1
+  baseline_travel_time_minutes: 1
+  dwell_time_minutes: 1
+
+two:
+  route: two
+  stop: two
+  sequence_order: 1
+  baseline_travel_time_minutes: 1
+  dwell_time_minutes: 1

@@ -31,3 +31,9 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+
+# GTFS transit data
+vendor/gtfs/stops.txt
+vendor/gtfs/routes.txt
+vendor/gtfs/trips.txt
+vendor/gtfs/stop_times.txt

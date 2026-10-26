@@ -1,1 +1,4 @@
 route-board/node_modules
+
+# GTFS transit data
+route_board/vendor/gtfs

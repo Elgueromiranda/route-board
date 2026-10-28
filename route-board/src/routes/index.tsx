@@ -1,41 +1,38 @@
+import { useEffect } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { LiveClock } from '../components/LiveClock';
 
 export const Route = createFileRoute('/')({ component: Home })
 
-const shuttles = [
-  {
-    code: 'BX', label: 'Line', name: 'Blue Express', tag: 'Tech',
-    detail: 'via 4th Ave & Medical Quad', corridor: 'Tech Campus', bay: '04',
-    scheduled: '14:40', eta: '3', status: 'On time', color: 'blue',
-  },
-  {
-    code: 'GL', label: 'Loop', name: 'Green Circulator',
-    detail: 'North Campus · Library Mall', corridor: 'Metro West', bay: '02',
-    scheduled: '14:45', eta: '8', status: 'On time', color: 'green',
-  },
-  {
-    code: 'RX', label: 'Air', name: 'Airport Flyer', tag: 'Express',
-    detail: 'Terminals 1 · 2 · Cargo Zone', corridor: 'Air Shuttle', bay: '07',
-    scheduled: '14:48', eta: '16', status: '+5 min', color: 'red', delayed: true,
-  },
-  {
-    code: 'CT', label: 'Town', name: 'Westside Connector',
-    detail: 'South Ferry · Waterfront Hub', corridor: 'Metro West', bay: '01',
-    scheduled: '14:56', eta: '19', status: 'On time', color: 'orange',
-  },
-  {
-    code: 'MD', label: 'Med', name: 'Health Sciences Shuttle', tag: 'Bio',
-    detail: "Children's Hospital · Research Complex", corridor: 'Medical District', bay: '05',
-    scheduled: '15:02', eta: '24', status: '+4 min', color: 'navy', delayed: true,
-  },
-  {
-    code: 'OB', label: 'Line', name: 'Innovation Orbit',
-    detail: 'East Research · Start-up Pavilion', corridor: 'Tech Campus', bay: '03',
-    scheduled: '15:15', eta: '33', status: 'On time', color: 'sky',
-  },
-]
-
 function Home() {
+  const queryClient = useQueryClient()
+  const { data: shuttles = [] } = useQuery({
+    queryKey: ['trips'],
+    queryFn: async () => {
+      const response = await fetch('http://localhost:3000/api/v1/trips')
+      if (!response.ok) throw new Error('Failed to fetch trips')
+      return response.json()
+    },
+  })
+
+  useEffect(() => {
+    const eventSource = new EventSource('http://localhost:3000/api/v1/arrivals/stream')
+
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data)
+      if (data.trip_id) {
+        queryClient.invalidateQueries({ queryKey: ['trips'] })
+      }
+    }
+
+    eventSource.onerror = (error) => {
+      console.warn('SSE connection error. Auto-reconnecting...', error)
+    }
+
+    return () => eventSource.close()
+  }, [queryClient])
+
   return (
     <div className="min-h-screen bg-[#f4f7f5] font-['Work_Sans',sans-serif] text-[14px] text-[#192b35]">
       <header className="sticky top-0 z-10 flex min-h-[68px] flex-wrap items-center justify-between gap-3 border-b border-[#dce4e5] bg-white/95 px-4 py-2.5 md:flex-nowrap md:px-6 xl:px-[max(24px,calc((100vw-1440px)/2))]">
@@ -50,7 +47,7 @@ function Home() {
         <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-3">
           <span className="hidden items-center gap-1.5 whitespace-nowrap rounded-full border border-[#dce4e5] px-2.5 py-2 text-[11px] font-semibold uppercase lg:inline-flex"><span className="material-symbols-outlined text-base text-[#126b91]">location_on</span>Central Hub · Bay 4</span>
           <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[#b7e2cf] bg-[#e1f4eb] px-2 py-2 text-[9px] font-semibold uppercase tracking-wide text-[#126a4d] sm:text-[11px]"><i className="size-[7px] rounded-full bg-[#1c9a6d]" />System live</span>
-          <span className="hidden items-center gap-1.5 whitespace-nowrap text-[11px] font-semibold tabular-nums text-[#687780] sm:inline-flex"><span className="material-symbols-outlined text-[17px]">schedule</span>14:32:08</span>
+          <span className="hidden items-center gap-1.5 whitespace-nowrap text-[11px] font-semibold tabular-nums text-[#687780] sm:inline-flex"><span className="material-symbols-outlined text-[17px]">schedule</span><LiveClock /></span>
           <span className="material-symbols-outlined grid size-[30px] shrink-0 place-items-center rounded-full bg-[#126b91] text-white sm:size-[34px]" aria-label="Account">person</span>
         </div>
       </header>

@@ -5,44 +5,29 @@ class Api::V1::ArrivalsStreamController < ApplicationController
   def index
     response.headers['Content-Type'] = 'text/event-stream'
     response.headers['Cache-Control'] = 'no-cache'
-    response.headers['X-Accel-Buffering'] = 'no' # Disable Nginx buffering if deployed
+    response.headers['X-Accel-Buffering'] = 'no'
 
     sse = ActionController::Live::SSE.new(response.stream, retry: 3000, event: 'trip_update')
 
-    # Handle Game Day Replay: Check both headers and params for Last-Event-ID
+    # Read Last-Event-ID from headers or params (managed automatically by EventSource on reconnect)
     last_event_id = request.headers['Last-Event-ID'] || params[:last_event_id]
     last_id = last_event_id.to_i
 
-    # Replay any events missed while disconnected
+    # Replay missed events if client is reconnecting after a drop
     if last_id > 0
       TripEvent.where("id > ?", last_id).order(:id).find_each do |event|
-        sse.write({
-          event_id: event.id,
-          trip_id: event.trip_id,
-          event_type: event.event_type,
-          delay_delta_minutes: event.delay_delta_minutes,
-          observed_time: event.observed_time,
-          notes: event.notes
-        }, id: event.id)
+        write_sse(sse, event)
       end
     else
-      # Send initial connection handshake if no ID provided
-      sse.write({ message: "Connected to RouteBoard Live Arrival Stream" }, id: TripEvent.maximum(:id) || 0)
+      sse.write({ message: "Connected to RouteBoard Stream" }, id: TripEvent.maximum(:id) || 0)
     end
 
-    # Keep connection alive and poll for new events (lightweight zero-dependency pub/sub alternative)
+    # Real-time polling loop for active connection
     loop do
       current_max_id = TripEvent.maximum(:id) || 0
       if current_max_id > last_id
         TripEvent.where("id > ?", last_id).order(:id).find_each do |event|
-          sse.write({
-            event_id: event.id,
-            trip_id: event.trip_id,
-            event_type: event.event_type,
-            delay_delta_minutes: event.delay_delta_minutes,
-            observed_time: event.observed_time,
-            notes: event.notes
-          }, id: event.id)
+          write_sse(sse, event)
           last_id = event.id
         end
       end
@@ -52,5 +37,18 @@ class Api::V1::ArrivalsStreamController < ApplicationController
     # Client disconnected gracefully
   ensure
     sse.close
+  end
+
+  private
+
+  def write_sse(sse, event)
+    sse.write({
+      event_id: event.id,
+      trip_id: event.trip_id,
+      event_type: event.event_type,
+      delay_delta_minutes: event.delay_delta_minutes,
+      observed_time: event.observed_time,
+      notes: event.notes
+    }, id: event.id)
   end
 end

@@ -1,87 +1,77 @@
+# app/controllers/api/v1/trips_controller.rb
 class Api::V1::TripsController < ApplicationController
+  rescue_from ActiveRecord::StaleObjectError, with: :handle_stale_object
 
-  # Public: search and filter trips
-  def index
+ 
+
+
+ def index
+    # Force target date to match your seed date (2026-09-11)
+    target_date = params[:date] ? Date.parse(params[:date]) : Date.new(2026, 9, 11)
+    
+    # Correct date range order: beginning of day -> end of day
+    start_window = target_date.beginning_of_day
+    end_window = target_date.end_of_day
+
     trips = Trip.includes(:route, :vehicle)
-    trips = trips.where(route_id: params[:route_id]) if params[:route_id].present?
-    trips = trips.where(status: params[:status]) if params[:status].present?
-    trips = trips.where("scheduled_departure_time >= ?", Time.zone.parse(params[:departure_from])) if params[:departure_from].present?
+                .where(scheduled_departure_time: start_window..end_window)
+                .order(:scheduled_departure_time)
+                .limit(15)
 
-    render json: trips.as_json(include: [:route, :vehicle])
+    delay_sums = TripEvent.where(trip_id: trips.map(&:id))
+                          .group(:trip_id)
+                          .sum(:delay_delta_minutes)
+
+    render json: trips.as_json(include: [:route, :vehicle]).map { |trip|
+      trip.merge('current_delay_minutes' => delay_sums[trip['id']] || 0)
+    }
   end
-
-  # Public: get single trip details and timeline
-  def show
-    trip = Trip.includes(:route, :vehicle, trip_events: :stop).find(params[:id])
-    render json: trip.as_json(include: { route: { include: :stops }, vehicle: {}, trip_events: { include: :stop } })
-  end
-
-  # Public: get stop arrivals
-  def stop_arrivals
-    stop = Stop.find(params[:stop_id])
-    upcoming_trips = Trip.joins(route: :route_stops)
-                         .where(route_stops: { stop_id: stop.id })
-                         .where(status: %w[scheduled delayed active])
-
-    arrivals = upcoming_trips.map do |trip|
-      {
-        trip_id: trip.id,
-        route_code: trip.route.code,
-        scheduled_departure: trip.scheduled_departure_time,
-        estimated_arrival: trip.respond_to?(:calculate_eta) ? trip.calculate_eta(stop.id) : trip.scheduled_departure_time,
-        status: trip.status,
-        current_delay_minutes: trip.current_delay_minutes
-      }
-    end
-
-    render json: { stop: stop.name, arrivals: arrivals }
-  end
-
-  # Dispatcher: record trip update (synthetic observation, delay, status change)
+  # Dispatcher action to record updates / delays
   def record_update
-    trip = Trip.find(params[:id])
-    p = trip_update_params
-
-    delay_delta = p[:delay_delta_minutes].present? ? p[:delay_delta_minutes].to_i : (p[:delay_minutes].to_i rescue 0)
+    @trip = Trip.find(params[:id])
 
     ActiveRecord::Base.transaction do
-      if delay_delta != 0
-        trip.current_delay_minutes = (trip.current_delay_minutes || 0) + delay_delta
-        trip.status = "delayed" if trip.current_delay_minutes > 0
+      # 1. Create audit / trip event log
+      event = @trip.trip_events.create!(
+        event_type: params[:event_type], # e.g., 'delay'
+        delay_delta_minutes: params[:delay_minutes] || 0,
+        stop_id: params[:stop_id],
+        notes: params[:notes],
+        observed_time: Time.current
+      )
+
+      # 2. Update trip status/state if provided
+      if params[:status].present?
+        @trip.status = params[:status]
       end
 
-      trip.status = p[:status] if p[:status].present?
-      trip.save!
+      # 3. Save triggers optimistic locking check (lock_version)
+      @trip.save!
 
-      # Create audit trail & immutable event log for Game Day replay
-      TripEvent.create!(
-        trip: trip,
-        event_type: p[:event_type] || "delay_updated",
-        stop_id: p[:stop_id],
-        observed_time: Time.current,
-        delay_delta_minutes: delay_delta,
-        notes: p[:notes]
-      )
-
-      AuditEvent.create!(
-        actor_role: "dispatcher",
-        action: "record_trip_update",
-        details: "Updated trip #{trip.id}: status=#{trip.status}, delay=#{trip.current_delay_minutes}m"
-      )
+      render json: { success: true, trip: @trip, event: event }, status: :ok
     end
+  end
 
-    render json: { success: true, trip: trip.reload.as_json(include: :trip_events) }
-  rescue ActiveRecord::StaleObjectError
-    render json: { error: "Conflict: This trip was modified by another dispatcher. Please refresh." }, status: :conflict
-  rescue ActiveRecord::RecordInvalid => e
-    render json: { error: e.message }, status: :unprocessable_entity
+  def stop_arrivals
+    stop = Stop.find(params[:stop_id])
+    arrivals = stop.trips.map do |trip|
+      {
+        trip_id: trip.id,
+        route_name: trip.route.name,
+        scheduled_departure: trip.scheduled_departure_time,
+        estimated_arrival: trip.current_eta(stop),
+        status: trip.status,
+        delay_minutes: trip.current_delay_minutes
+      }
+    end
+    render json: arrivals
   end
 
   private
 
-  def trip_update_params
-    # Safely accepts either flat JSON or nested under :trip
-    source = params[:trip].present? ? params.require(:trip) : params
-    source.permit(:status, :current_delay_minutes, :event_type, :stop_id, :notes, :delay_delta_minutes, :delay_minutes)
+  def handle_stale_object
+    render json: { 
+      error: "Conflict: This trip was modified by another request. Please refresh and retry." 
+    }, status: :conflict
   end
 end

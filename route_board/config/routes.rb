@@ -1,17 +1,11 @@
-# config/routes.rb
 Rails.application.routes.draw do
-  namespace :api do
-    namespace :v1 do
-      resources :trips, only: [:index, :show] do
-        member do
-          post :record_update
-        end
-        collection do
-          get 'stop_arrivals/:stop_id', to: 'trips#stop_arrivals'
-        end
-      end
-    get 'stops/:stop_id/arrivals', to: 'trips#stop_arrivals'
-    get 'arrivals/stream', to: 'arrivals_stream#index'
-    end
+    root 'api/v1/trips#index'
+
+
+namespace :api do
+  namespace :v1 do
+    post 'dispatcher/trips', to: 'dispatcher#create_trip'
+    post 'dispatcher/trips/:trip_id/stops', to: 'dispatcher#add_stop'
   end
+end
 end

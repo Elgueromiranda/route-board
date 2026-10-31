@@ -10,81 +10,44 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_25_145529) do
-  create_table "audit_events", force: :cascade do |t|
-    t.string "actor_role"
-    t.string "action"
-    t.text "details"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+ActiveRecord::Schema[8.1].define(version: 2026_10_29_203915) do
+  create_table "calendars", primary_key: "service_id", id: :string, force: :cascade do |t|
+    t.boolean "monday", default: false
+    t.boolean "tuesday", default: false
+    t.boolean "wednesday", default: false
+    t.boolean "thursday", default: false
+    t.boolean "friday", default: false
+    t.boolean "saturday", default: false
+    t.boolean "sunday", default: false
+    t.date "start_date"
+    t.date "end_date"
   end
 
-  create_table "route_stops", force: :cascade do |t|
-    t.integer "route_id", null: false
-    t.integer "stop_id", null: false
-    t.integer "sequence_order"
-    t.integer "baseline_travel_time_minutes"
-    t.integer "dwell_time_minutes"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+  create_table "route_stops", id: false, force: :cascade do |t|
+    t.string "trip_id", null: false
+    t.string "stop_id", null: false
+    t.string "departure_time"
+    t.integer "stop_sequence"
+    t.string "route_id"
+    t.string "service_id"
+    t.index ["departure_time"], name: "index_route_stops_on_departure_time"
     t.index ["route_id"], name: "index_route_stops_on_route_id"
+    t.index ["service_id", "departure_time"], name: "idx_route_stops_service_dep"
+    t.index ["stop_id", "departure_time"], name: "idx_route_stops_stop_dep"
     t.index ["stop_id"], name: "index_route_stops_on_stop_id"
+    t.index ["trip_id"], name: "index_route_stops_on_trip_id"
   end
 
-  create_table "routes", force: :cascade do |t|
-    t.string "name"
-    t.string "code"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["code"], name: "index_routes_on_code", unique: true
+  create_table "routes", primary_key: "route_id", id: :string, force: :cascade do |t|
+    t.string "route_short_name"
+    t.string "route_long_name"
+    t.string "route_color"
   end
 
-  create_table "stops", force: :cascade do |t|
-    t.string "name"
-    t.decimal "latitude"
-    t.decimal "longitude"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+  create_table "stops", primary_key: "stop_id", id: :string, force: :cascade do |t|
+    t.string "stop_name"
+    t.string "stop_desc"
+    t.string "stop_lat"
+    t.string "stop_lon"
   end
-
-  create_table "trip_events", force: :cascade do |t|
-    t.integer "trip_id", null: false
-    t.string "event_type"
-    t.integer "stop_id", null: false
-    t.datetime "observed_time"
-    t.integer "delay_delta_minutes"
-    t.text "notes"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["stop_id"], name: "index_trip_events_on_stop_id"
-    t.index ["trip_id"], name: "index_trip_events_on_trip_id"
-  end
-
-  create_table "trips", force: :cascade do |t|
-    t.integer "route_id", null: false
-    t.integer "vehicle_id", null: false
-    t.datetime "scheduled_departure_time"
-    t.string "status"
-    t.integer "current_delay_minutes"
-    t.integer "lock_version"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["route_id"], name: "index_trips_on_route_id"
-    t.index ["vehicle_id"], name: "index_trips_on_vehicle_id"
-  end
-
-  create_table "vehicles", force: :cascade do |t|
-    t.string "code"
-    t.string "vehicle_type"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["code"], name: "index_vehicles_on_code", unique: true
-  end
-
-  add_foreign_key "route_stops", "routes"
-  add_foreign_key "route_stops", "stops"
-  add_foreign_key "trip_events", "stops"
-  add_foreign_key "trip_events", "trips"
-  add_foreign_key "trips", "routes"
-  add_foreign_key "trips", "vehicles"
 end

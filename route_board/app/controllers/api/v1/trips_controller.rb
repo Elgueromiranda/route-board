@@ -1,77 +1,48 @@
-# app/controllers/api/v1/trips_controller.rb
-class Api::V1::TripsController < ApplicationController
-  rescue_from ActiveRecord::StaleObjectError, with: :handle_stale_object
+module Api
+  module V1
+    class TripsController < ApplicationController
 
- 
+def index
+  now     = Time.zone.now
+  today   = now.to_date
+  dow     = today.strftime('%A').downcase
+  now_sec = now.hour * 3600 + now.min * 60
+  end_sec = now_sec + 30 * 60 + 59
+  to_gtfs = ->(s) { format('%02d:%02d:%02d', s / 3600, (s % 3600) / 60, s % 60) }
 
-
- def index
-    # Force target date to match your seed date (2026-09-11)
-    target_date = params[:date] ? Date.parse(params[:date]) : Date.new(2026, 9, 11)
-    
-    # Correct date range order: beginning of day -> end of day
-    start_window = target_date.beginning_of_day
-    end_window = target_date.end_of_day
-
-    trips = Trip.includes(:route, :vehicle)
-                .where(scheduled_departure_time: start_window..end_window)
-                .order(:scheduled_departure_time)
-                .limit(15)
-
-    delay_sums = TripEvent.where(trip_id: trips.map(&:id))
-                          .group(:trip_id)
-                          .sum(:delay_delta_minutes)
-
-    render json: trips.as_json(include: [:route, :vehicle]).map { |trip|
-      trip.merge('current_delay_minutes' => delay_sums[trip['id']] || 0)
-    }
-  end
-  # Dispatcher action to record updates / delays
-  def record_update
-    @trip = Trip.find(params[:id])
-
-    ActiveRecord::Base.transaction do
-      # 1. Create audit / trip event log
-      event = @trip.trip_events.create!(
-        event_type: params[:event_type], # e.g., 'delay'
-        delay_delta_minutes: params[:delay_minutes] || 0,
-        stop_id: params[:stop_id],
-        notes: params[:notes],
-        observed_time: Time.current
-      )
-
-      # 2. Update trip status/state if provided
-      if params[:status].present?
-        @trip.status = params[:status]
-      end
-
-      # 3. Save triggers optimistic locking check (lock_version)
-      @trip.save!
-
-      render json: { success: true, trip: @trip, event: event }, status: :ok
-    end
+  active_services = Rails.cache.fetch("active_services:#{today}", expires_in: 12.hours) do
+    Calendar.where("#{dow} = ?", true)
+            .where("start_date <= ? AND end_date >= ?", today, today)
+            .pluck(:service_id)
   end
 
-  def stop_arrivals
-    stop = Stop.find(params[:stop_id])
-    arrivals = stop.trips.map do |trip|
-      {
-        trip_id: trip.id,
-        route_name: trip.route.name,
-        scheduled_departure: trip.scheduled_departure_time,
-        estimated_arrival: trip.current_eta(stop),
-        status: trip.status,
-        delay_minutes: trip.current_delay_minutes
+  # Eager load the associations so Rails fetches stops and routes efficiently
+  route_stops = RouteStop
+    .includes(:route, :stop)
+    .where(service_id: active_services)
+    .where(departure_time: to_gtfs.(now_sec)..to_gtfs.(end_sec))
+
+  render json: route_stops.group_by(&:route_id).map { |route_id, trips|
+    route = trips.first.route
+    {
+      route_id:           route_id,
+      route_short_name: route&.route_short_name,
+      route_long_name:  route&.route_long_name,
+      route_color:      route&.route_color.present? ? "##{route.route_color}" : nil,
+      trips: trips.sort_by(&:stop_sequence).map { |t|
+        secs = t.departure_time.split(':').map(&:to_i).then { |h, m, s| h * 3600 + m * 60 + s }
+        {
+          trip_id:        t.trip_id,
+          departure_time: t.departure_time[0..4],
+          stop_sequence:  t.stop_sequence,
+          service_id:     t.service_id,
+          minutes_away:   ((secs - now_sec) / 60.0).round,
+          stop:           t.stop # <-- This embeds the full Stop object automatically via the association
+        }
       }
+    }
+  }, status: :ok
+end
     end
-    render json: arrivals
-  end
-
-  private
-
-  def handle_stale_object
-    render json: { 
-      error: "Conflict: This trip was modified by another request. Please refresh and retry." 
-    }, status: :conflict
   end
 end

@@ -1,17 +1,11 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  route: one
-  vehicle: one
-  scheduled_departure_time: 2026-10-25 09:55:28
-  status: MyString
-  current_delay_minutes: 1
-  lock_version: 1
+  route_id: MyString
+  service_id: MyString
+  trip_id: MyString
 
 two:
-  route: two
-  vehicle: two
-  scheduled_departure_time: 2026-10-25 09:55:28
-  status: MyString
-  current_delay_minutes: 1
-  lock_version: 1
+  route_id: MyString
+  service_id: MyString
+  trip_id: MyString

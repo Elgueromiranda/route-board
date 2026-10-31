@@ -1,262 +1,209 @@
-require 'csv'
-require 'set'
-require 'date'
+ require 'csv'
 
-puts "Cleaning existing database records..."
-TripEvent.delete_all rescue nil
-Trip.delete_all rescue nil
-RouteStop.delete_all rescue nil
-Route.delete_all rescue nil
-Stop.delete_all rescue nil
-Vehicle.delete_all rescue nil
+# puts "Seeding bus routes..."
+# Route.delete_all
 
-gtfs_dir = Rails.root.join("vendor", "gtfs")
+# routes_path = Rails.root.join('vendor', 'gtfs', 'routes.txt')
 
-# Helper to parse GTFS date strings (YYYYMMDD) into Date objects
-def parse_gtfs_date(date_str)
-  return nil unless date_str.present? && date_str.length == 8
-  Date.strptime(date_str, '%Y%m%d')
-rescue
-  nil
+# CSV.foreach(routes_path, headers: true) do |row|
+#   # Filter strictly for bus routes (route_type 3)
+#   if row['route_type'].to_i == 3
+#     Route.create!(
+#       route_id: row['route_id'],
+#       route_short_name: row['route_short_name'],
+#       route_long_name: row['route_long_name'],
+#       route_color: row['route_color']
+#     )
+#   end
+# end
+
+# puts "Successfully imported #{Route.count} bus routes."
+
+# puts "Seeding trips..."
+# Trip.delete_all
+
+# trips_path = Rails.root.join('vendor', 'gtfs', 'trips.txt')
+
+# # Use a Set for blazing fast O(1) lookups
+# valid_route_ids = Route.pluck(:route_id).to_set
+
+# trips_to_insert = []
+
+# CSV.foreach(trips_path, headers: true) do |row|
+#   route_id = row['route_id']
+
+#   if valid_route_ids.include?(route_id)
+#     trips_to_insert << {
+#       trip_id: row['trip_id'],
+#       route_id: route_id,
+#       service_id: row['service_id'],
+#     }
+#   end
+# end
+
+# # Bulk insert in batches inside a single transaction
+# ActiveRecord::Base.transaction do
+#   trips_to_insert.each_slice(5000) do |batch|
+#     Trip.insert_all(batch)
+#   end
+# end
+
+# puts "Successfully imported #{Trip.count} bus trips."
+# puts "Seeding route_stops (from stop_times.txt)..."
+# RouteStop.delete_all
+
+# stop_times_path = Rails.root.join('vendor', 'gtfs', 'stop_times.txt')
+
+# # O(1) Set lookup for valid bus trip IDs we already imported
+# valid_trip_ids = Trip.pluck(:trip_id).to_set
+
+# route_stops_to_insert = []
+# batch_size = 5000
+
+# CSV.foreach(stop_times_path, headers: true) do |row|
+#   trip_id = row['trip_id']
+
+#   # Only import stop times belonging to our valid bus trips
+#   if valid_trip_ids.include?(trip_id)
+#     route_stops_to_insert << {
+#       trip_id: trip_id,
+#       stop_id: row['stop_id'],
+#       departure_time: row['departure_time'],
+#       stop_sequence: row['stop_sequence'].to_i,
+#     }
+
+#     # Flush in batches to keep memory usage low and speed high
+#     if route_stops_to_insert.size >= batch_size
+#       ActiveRecord::Base.transaction do
+#         RouteStop.insert_all(route_stops_to_insert)
+#       end
+#       route_stops_to_insert.clear
+#     end
+#   end
+# end
+
+# # Insert any remaining records in the buffer
+# unless route_stops_to_insert.empty?
+#   ActiveRecord::Base.transaction do
+#     RouteStop.insert_all(route_stops_to_insert)
+#   end
+# end
+
+# puts "Successfully imported #{RouteStop.count} route stops."
+
+# puts "Seeding stops..."
+# Stop.delete_all
+
+# stops_path = Rails.root.join('vendor', 'gtfs', 'stops.txt')
+
+# # O(1) Set lookup for only the stops that are actually used by our bus route_stops
+# valid_stop_ids = RouteStop.distinct.pluck(:stop_id).to_set
+
+# stops_to_insert = []
+# batch_size = 5000
+
+# CSV.foreach(stops_path, headers: true) do |row|
+#   stop_id = row['stop_id']
+
+#   # Only import stops that exist in our active bus route_stops
+#   if valid_stop_ids.include?(stop_id)
+#     stops_to_insert << {
+#       stop_id: stop_id,
+#       stop_name: row['stop_name'],
+#       stop_desc: row['stop_desc'],
+#       stop_lat: row['stop_lat'],
+#       stop_lon: row['stop_lon'],
+#     }
+
+#     # Flush in batches for blazing fast inserts
+#     if stops_to_insert.size >= batch_size
+#       ActiveRecord::Base.transaction do
+#         Stop.insert_all(stops_to_insert)
+#       end
+#       stops_to_insert.clear
+#     end
+#   end
+# end
+
+# # Insert any remaining buffered records
+# unless stops_to_insert.empty?
+#   ActiveRecord::Base.transaction do
+#     Stop.insert_all(stops_to_insert)
+#   end
+# end
+# db/seeds.rb
+require "csv"
+require "date"
+
+GTFS_DIR = Rails.root.join("vendor", "gtfs")
+
+def parse_gtfs_date(str)
+  Date.strptime(str, "%Y%m%d")
 end
 
-# Helper to parse GTFS time strings (e.g., "08:30:00" or "25:15:00" past midnight)
-def parse_gtfs_time(time_str, base_date)
-  return base_date.to_time + 8.hours unless time_str.present?
-  parts = time_str.split(':').map(&:to_i)
-  hours = parts[0] || 0
-  minutes = parts[1] || 0
-  seconds = parts[2] || 0
-  
-  days_offset = hours / 24
-  effective_hours = hours % 24
-  
-  (base_date + days_offset.days).to_time + effective_hours.hours + minutes.minutes + seconds.seconds
+# 1. Load calendar.txt -> { service_id => { weekdays:, start:, end: } }
+calendar = {}
+CSV.foreach(GTFS_DIR.join("calendar.txt"), headers: true) do |row|
+  calendar[row["service_id"]] = {
+    weekdays: [
+      row["monday"], row["tuesday"], row["wednesday"],
+      row["thursday"], row["friday"], row["saturday"], row["sunday"]
+    ].map(&:to_i),
+    start_date: parse_gtfs_date(row["start_date"]),
+    end_date:   parse_gtfs_date(row["end_date"])
+  }
 end
 
-# 1. Parse calendar.txt for service schedules
-puts "1. Parsing calendar.txt for service schedules..."
-services = {} 
+# 2. Load calendar_dates.txt -> { service_id => { date => exception_type } }
+exceptions = Hash.new { |h, k| h[k] = {} }
+CSV.foreach(GTFS_DIR.join("calendar_dates.txt"), headers: true) do |row|
+  exceptions[row["service_id"]][parse_gtfs_date(row["date"])] = row["exception_type"].to_i
+end
 
-if File.exist?(gtfs_dir.join("calendar.txt"))
-  CSV.foreach(gtfs_dir.join("calendar.txt"), headers: true) do |row|
-    s_id = row["service_id"]
-    services[s_id] = {
-      start_date: parse_gtfs_date(row["start_date"]),
-      end_date: parse_gtfs_date(row["end_date"]),
-      days: [
-        row["monday"].to_i == 1,
-        row["tuesday"].to_i == 1,
-        row["wednesday"].to_i == 1,
-        row["thursday"].to_i == 1,
-        row["friday"].to_i == 1,
-        row["saturday"].to_i == 1,
-        row["sunday"].to_i == 1
-      ]
+# 3. Expand each service into concrete dates
+service_dates = Hash.new { |h, k| h[k] = Set.new }
+
+calendar.each do |service_id, cal|
+  (cal[:start_date]..cal[:end_date]).each do |date|
+    # Ruby: 0=Sunday, 1=Monday... so map GTFS monday..sunday to wday index
+    gtfs_wday = [1, 2, 3, 4, 5, 6, 0][date.wday]
+    service_dates[service_id] << date if cal[:weekdays][gtfs_wday] == 1
+  end
+end
+
+# Apply exceptions
+exceptions.each do |service_id, dates|
+  dates.each do |date, type|
+    if type == 1
+      service_dates[service_id] << date        # add
+    elsif type == 2
+      service_dates[service_id].delete(date)   # remove
+    end
+  end
+end
+
+# 4. Walk trips.txt and insert one row per (trip, date)
+Trip.delete_all  # or use insert_all for speed
+
+batch = []
+CSV.foreach(GTFS_DIR.join("trips.txt"), headers: true) do |row|
+  service_id = row["service_id"]
+  dates = service_dates[service_id]
+  next if dates.nil? || dates.empty?
+
+  dates.each do |date|
+    batch << {
+  trip_id:    row["trip_id"],          # raw GTFS trip_id, no suffix
+      route_id:   row["route_id"],
+      service_id: service_id,
+      date:       date
     }
   end
-end
-puts "Loaded #{services.size} service schedule rules."
 
-# 2. Parse calendar_dates.txt for exception dates
-puts "2. Parsing calendar_dates.txt for service exceptions..."
-calendar_exceptions = Hash.new { |h, k| h[k] = {} } 
-
-if File.exist?(gtfs_dir.join("calendar_dates.txt"))
-  CSV.foreach(gtfs_dir.join("calendar_dates.txt"), headers: true) do |row|
-    s_id = row["service_id"]
-    date = parse_gtfs_date(row["date"])
-    exc_type = row["exception_type"].to_i 
-    if date
-      calendar_exceptions[s_id][date] = exc_type
-    end
+  if batch.size >= 5_000
+    Trip.insert_all(batch)
+    batch.clear
   end
 end
-
-# 3. Identify valid bus route IDs from routes.txt (route_type == 3)
-puts "3. Filtering valid bus routes from routes.txt..."
-valid_route_ids = Set.new
-route_data_cache = {}
-
-CSV.foreach(gtfs_dir.join("routes.txt"), headers: true) do |row|
-  next unless row["route_type"].to_i == 3
-  r_id = row["route_id"]
-  valid_route_ids.add(r_id)
-  route_data_cache[r_id] = {
-    name: row["route_long_name"].presence || "Route #{row["route_short_name"]}",
-    code: "CTA-#{row["route_short_name"]}"
-  }
-end
-puts "Found #{valid_route_ids.size} bus routes."
-
-# 4. Parse trips.txt linking routes to trips and service_ids
-puts "4. Processing bus trips from trips.txt..."
-valid_trip_ids = Set.new
-route_trips = Hash.new { |h, k| h[k] = [] } 
-
-CSV.foreach(gtfs_dir.join("trips.txt"), headers: true) do |row|
-  r_id = row["route_id"]
-  next unless valid_route_ids.include?(r_id)
-  
-  t_id = row["trip_id"]
-  valid_trip_ids.add(t_id)
-  route_trips[r_id] << {
-    trip_id: t_id,
-    service_id: row["service_id"],
-    headsign: row["trip_headsign"]
-  }
-end
-puts "Found #{valid_trip_ids.size} total valid bus trips."
-
-# 5. Parse stop_times.txt for stop sequences and first-stop departure times
-puts "5. Parsing stop_times.txt for stop sequences and departure times..."
-trip_stop_sequences = Hash.new { |h, k| h[k] = [] }
-trip_first_stop_times = {} 
-used_stop_ids = Set.new
-
-CSV.foreach(gtfs_dir.join("stop_times.txt"), headers: true) do |row|
-  t_id = row["trip_id"]
-  next unless valid_trip_ids.include?(t_id)
-
-  s_id = row["stop_id"]
-  seq = row["stop_sequence"].to_i
-  used_stop_ids.add(s_id)
-
-  trip_stop_sequences[t_id] << {
-    stop_id: s_id,
-    sequence: seq
-  }
-end
-
-CSV.foreach(gtfs_dir.join("stop_times.txt"), headers: true) do |row|
-  t_id = row["trip_id"]
-  next unless valid_trip_ids.include?(t_id)
-  if row["stop_sequence"].to_i == 1
-    trip_first_stop_times[t_id] = row["departure_time"]
-  end
-end
-
-trip_stop_sequences.each { |t_id, stops| stops.sort_by! { |s| s[:sequence] } }
-puts "Identified #{used_stop_ids.size} unique physical bus stops."
-
-# 6. Import filtered physical stops
-puts "6. Importing filtered bus stops from stops.txt..."
-stop_mapping = {}
-Stop.transaction do
-  CSV.foreach(gtfs_dir.join("stops.txt"), headers: true) do |row|
-    s_id = row["stop_id"]
-    next unless used_stop_ids.include?(s_id)
-
-    stop = Stop.create!(
-      name: row["stop_name"],
-      latitude: row["stop_lat"].to_f,
-      longitude: row["stop_lon"].to_f
-    )
-    stop_mapping[s_id] = stop
-  end
-end
-puts "Successfully imported #{Stop.count} filtered bus stops!"
-
-# 7. Create Routes and link baseline RouteStops
-puts "7. Creating bus routes and linking baseline stop sequences..."
-route_records = {}
-Route.transaction do
-  route_data_cache.each do |gtfs_route_id, data|
-    route = Route.create!(
-      name: data[:name],
-      code: data[:code]
-    )
-    route_records[gtfs_route_id] = route
-
-    sample_trip_info = route_trips[gtfs_route_id].first
-    next unless sample_trip_info
-
-    stops_list = trip_stop_sequences[sample_trip_info[:trip_id]]
-    next unless stops_list
-
-    stops_list.each_with_index do |st_data, index|
-      stop = stop_mapping[st_data[:stop_id]]
-      next unless stop
-
-      RouteStop.create!(
-        route: route,
-        stop: stop,
-        sequence_order: index + 1,
-        baseline_travel_time_minutes: 3,
-        dwell_time_minutes: 2
-      )
-    end
-  end
-end
-puts "Successfully imported #{Route.count} routes with baseline stop sequences!"
-
-# 8. Set up default operational vehicle
-puts "8. Setting up default operational vehicle..."
-vehicle = Vehicle.find_or_create_by!(code: "CTA-SHUTTLE-01") do |v|
-  v.vehicle_type = "Electric Transit Bus"
-end
-
-# 9. Blazing-fast batched import of scheduled bus trips across calendar dates
-puts "9. Expanding and batch-importing scheduled bus trips across calendar dates..."
-imported_trips_count = 0
-batch = []
-batch_size = 5000
-now = Time.current
-
-route_trips.each do |gtfs_route_id, trips|
-  route = route_records[gtfs_route_id]
-  next unless route
-
-  trips.each do |t_info|
-    s_id = t_info[:service_id]
-    service_rule = services[s_id]
-    next unless service_rule && service_rule[:start_date] && service_rule[:end_date]
-
-    raw_time = trip_first_stop_times[t_info[:trip_id]]
-    current_date = service_rule[:start_date]
-    end_date = service_rule[:end_date]
-    exceptions = calendar_exceptions[s_id]
-
-    while current_date <= end_date
-      ruby_wday = current_date.wday
-      gtfs_wday_idx = ruby_wday == 0 ? 6 : ruby_wday - 1
-
-      is_scheduled_day = service_rule[:days][gtfs_wday_idx]
-      exception_type = exceptions[current_date]
-
-      runs_today = case exception_type
-      when 1 then true
-      when 2 then false
-      else is_scheduled_day
-      end
-
-      if runs_today
-        departure_time = parse_gtfs_time(raw_time, current_date)
-
-        batch << {
-          route_id: route.id,
-          vehicle_id: vehicle.id,
-          scheduled_departure_time: departure_time,
-          status: "scheduled",
-          current_delay_minutes: 0,
-          created_at: now,
-          updated_at: now
-        }
-        imported_trips_count += 1
-
-        if batch.size >= batch_size
-          Trip.insert_all(batch)
-          batch.clear
-        end
-      end
-
-      current_date += 1.day
-    end
-  end
-end
-
-# Insert any remainder
-Trip.insert_all(batch) if batch.any?
-
-puts "Successfully imported #{imported_trips_count} scheduled trip instances across the true calendar range!"
-puts "Database seeding fully completed!"
+Trip.insert_all(batch, unique_by: [:trip_id, :date])
+puts "Seeded #{Trip.count} trip-days"

@@ -1,11 +1,15 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  name: MyString
-  latitude: 9.99
-  longitude: 9.99
+  stop_id: MyString
+  stop_name: MyString
+  stop_desc: MyString
+  stop_lat: MyString
+  stop_lon: MyString
 
 two:
-  name: MyString
-  latitude: 9.99
-  longitude: 9.99
+  stop_id: MyString
+  stop_name: MyString
+  stop_desc: MyString
+  stop_lat: MyString
+  stop_lon: MyString

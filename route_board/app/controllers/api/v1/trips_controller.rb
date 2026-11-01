@@ -2,6 +2,7 @@ module Api
   module V1
     class TripsController < ApplicationController
 
+
 def index
   now     = Time.zone.now
   today   = now.to_date
@@ -16,30 +17,45 @@ def index
             .pluck(:service_id)
   end
 
-  # Eager load the associations so Rails fetches stops and routes efficiently
   route_stops = RouteStop
     .includes(:route, :stop)
     .where(service_id: active_services)
     .where(departure_time: to_gtfs.(now_sec)..to_gtfs.(end_sec))
 
-  render json: route_stops.group_by(&:route_id).map { |route_id, trips|
-    route = trips.first.route
-    {
-      route_id:           route_id,
-      route_short_name: route&.route_short_name,
-      route_long_name:  route&.route_long_name,
-      route_color:      route&.route_color.present? ? "##{route.route_color}" : nil,
-      trips: trips.sort_by(&:stop_sequence).map { |t|
-        secs = t.departure_time.split(':').map(&:to_i).then { |h, m, s| h * 3600 + m * 60 + s }
-        {
-          trip_id:        t.trip_id,
-          departure_time: t.departure_time[0..4],
-          stop_sequence:  t.stop_sequence,
-          service_id:     t.service_id,
-          minutes_away:   ((secs - now_sec) / 60.0).round,
-          stop:           t.stop # <-- This embeds the full Stop object automatically via the association
+  render json: route_stops.group_by(&:route_id).map { |route_id, r_stops|
+    route = r_stops.first&.route
+
+    # Pick the single trip with the earliest departure time in this window
+    trip_entry = r_stops.group_by(&:trip_id).min_by { |_, t_stops| 
+      t_stops.map(&:departure_time).min 
+    }
+
+    trip_data = if trip_entry
+      trip_id, t_stops = trip_entry
+      first_stop = t_stops.first
+      {
+        trip_id:    trip_id,
+        service_id: first_stop.service_id,
+        stops:      t_stops.sort_by(&:stop_sequence).map { |t|
+          secs = t.departure_time.split(':').map(&:to_i).then { |h, m, s| h * 3600 + m * 60 + s }
+          {
+            stop_sequence:  t.stop_sequence,
+            departure_time: t.departure_time[0..4],
+            minutes_away:   ((secs - now_sec) / 60.0).round,
+            stop:           t.stop # Full nested stop object
+          }
         }
       }
+    else
+      nil
+    end
+
+    {
+      route_id:           route_id,
+      route_short_name:   route&.route_short_name,
+      route_long_name:    route&.route_long_name,
+      route_color:        route&.route_color.present? ? "##{route.route_color}" : nil,
+      trip:               trip_data # Singular key holding one trip with all its stops
     }
   }, status: :ok
 end

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { LiveClock } from '../components/LiveClock';
 
@@ -65,6 +65,7 @@ function Home() {
           <span className="flex flex-col gap-[3px]"><strong className="font-['Space_Grotesk',sans-serif] text-lg font-semibold leading-none">RouteBoard</strong><small className="text-[8px] font-semibold uppercase tracking-[.07em] text-[#687780] sm:text-[10px]">Shuttle dispatch & arrival</small></span>
         </a>
         <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-3">
+          <Link className="rounded px-3 py-2 text-xs font-semibold text-[#126b91] no-underline hover:bg-[#f1f5f3]" to="/dispatch">Dispatch</Link>
           <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[#b7e2cf] bg-[#e1f4eb] px-2 py-2 text-[9px] font-semibold uppercase tracking-wide text-[#126a4d] sm:text-[11px]"><i className="size-[7px] rounded-full bg-[#1c9a6d]" />System live</span>
           <span className="hidden items-center gap-1.5 whitespace-nowrap text-[11px] font-semibold tabular-nums text-[#687780] sm:inline-flex"><span className="material-symbols-outlined text-[17px]">schedule</span><LiveClock /></span>
           <span className="material-symbols-outlined grid size-[30px] shrink-0 place-items-center rounded-full bg-[#126b91] text-white sm:size-[34px]" aria-label="Account">person</span>

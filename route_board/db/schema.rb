@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_29_203915) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_10_180743) do
   create_table "calendars", primary_key: "service_id", id: :string, force: :cascade do |t|
     t.boolean "monday", default: false
     t.boolean "tuesday", default: false
@@ -30,10 +30,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_203915) do
     t.integer "stop_sequence"
     t.string "route_id"
     t.string "service_id"
-    t.index ["departure_time"], name: "index_route_stops_on_departure_time"
     t.index ["route_id"], name: "index_route_stops_on_route_id"
-    t.index ["service_id", "departure_time"], name: "idx_route_stops_service_dep"
-    t.index ["stop_id", "departure_time"], name: "idx_route_stops_stop_dep"
+    t.index ["service_id"], name: "index_route_stops_on_service_id"
     t.index ["stop_id"], name: "index_route_stops_on_stop_id"
     t.index ["trip_id"], name: "index_route_stops_on_trip_id"
   end
@@ -49,5 +47,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_203915) do
     t.string "stop_desc"
     t.string "stop_lat"
     t.string "stop_lon"
+  end
+
+  create_table "trips", id: false, force: :cascade do |t|
+    t.string "route_id"
+    t.string "service_id"
+    t.string "trip_id"
+  end
+
+  create_table "vehicles", force: :cascade do |t|
+    t.string "label"
+    t.string "status", default: "available", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "route_id"
+    t.index ["route_id"], name: "index_vehicles_on_route_id", unique: true
+    t.index ["status"], name: "index_vehicles_on_status"
   end
 end

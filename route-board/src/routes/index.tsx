@@ -4,20 +4,30 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { LiveClock } from '../components/LiveClock';
 
 type Shuttle = {
-  code: string
+  code?: string
+  route_id?: string
   route_color?: string
   route_short_name?: string
   route_long_name: string
+  vehicle?: {
+    id: number | string
+    label: string | null
+    status?: string
+  } | null
   trip: {
-    departure_time: string
     stops: Array<{
-      minutes_away: number
+      stop_sequence: number
+      departure_time: string
       stop?: { stop_desc?: string | null } | null
     }>
   }
   bay: string
   delayed: boolean
   status: string
+}
+
+function getNextStop(shuttle: Shuttle) {
+  return [...shuttle.trip.stops].sort((first, second) => first.stop_sequence - second.stop_sequence)[0]
 }
 
 export const Route = createFileRoute('/')({ component: Home })
@@ -68,7 +78,6 @@ function Home() {
           <Link className="rounded px-3 py-2 text-xs font-semibold text-[#126b91] no-underline hover:bg-[#f1f5f3]" to="/dispatch">Dispatch</Link>
           <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[#b7e2cf] bg-[#e1f4eb] px-2 py-2 text-[9px] font-semibold uppercase tracking-wide text-[#126a4d] sm:text-[11px]"><i className="size-[7px] rounded-full bg-[#1c9a6d]" />System live</span>
           <span className="hidden items-center gap-1.5 whitespace-nowrap text-[11px] font-semibold tabular-nums text-[#687780] sm:inline-flex"><span className="material-symbols-outlined text-[17px]">schedule</span><LiveClock /></span>
-          <span className="material-symbols-outlined grid size-[30px] shrink-0 place-items-center rounded-full bg-[#126b91] text-white sm:size-[34px]" aria-label="Account">person</span>
         </div>
       </header>
 
@@ -103,29 +112,32 @@ function Home() {
         <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,1.9fr)_minmax(340px,.95fr)] lg:gap-[18px]" id="arrivals">
           <section className="flex min-w-0 flex-col gap-2" aria-label="Upcoming shuttle arrivals">
             <div className="hidden grid-cols-[minmax(175px,2.25fr)_minmax(78px,.8fr)_minmax(66px,.68fr)_minmax(62px,.62fr)_minmax(82px,.85fr)] items-center gap-1 px-3 pb-px text-[9px] font-bold uppercase tracking-[.08em] text-[#687780] md:grid lg:grid-cols-[minmax(220px,2.25fr)_minmax(90px,.8fr)_minmax(75px,.68fr)_minmax(75px,.62fr)_minmax(100px,.85fr)] lg:gap-2"><span>Shuttle route & destination</span><span className="text-center">Vehicle</span><span className="text-center">Schedule</span><span className="text-right">Live ETA</span><span className="text-right">Route map</span></div>
-            {filteredShuttles.map((shuttle, index) => (
-              <article className={`grid min-h-[85px] grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 rounded-lg border bg-white p-[11px] transition-shadow md:grid-cols-[minmax(175px,1.8fr)_minmax(78px,.72fr)_minmax(66px,.62fr)_minmax(62px,.55fr)_minmax(82px,.72fr)] md:gap-1 md:p-2 lg:grid-cols-[minmax(220px,2.25fr)_minmax(90px,.8fr)_minmax(75px,.68fr)_minmax(75px,.62fr)_minmax(100px,.85fr)] lg:gap-2 lg:px-3 ${index === 0 ? 'border-[#3987a3] shadow-[inset_0_0_0_1px_#3987a3]' : 'border-[#e5ebea]'}`} key={shuttle.code}>
+            {filteredShuttles.map((shuttle, index) => {
+              const nextStop = getNextStop(shuttle)
+              return (
+              <article className={`grid min-h-[85px] grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 rounded-lg border bg-white p-[11px] transition-shadow md:grid-cols-[minmax(175px,1.8fr)_minmax(78px,.72fr)_minmax(66px,.62fr)_minmax(62px,.55fr)_minmax(82px,.72fr)] md:gap-1 md:p-2 lg:grid-cols-[minmax(220px,2.25fr)_minmax(90px,.8fr)_minmax(75px,.68fr)_minmax(75px,.62fr)_minmax(100px,.85fr)] lg:gap-2 lg:px-3 ${index === 0 ? 'border-[#3987a3] shadow-[inset_0_0_0_1px_#3987a3]' : 'border-[#e5ebea]'}`} key={shuttle.route_id ?? shuttle.code ?? `${shuttle.route_short_name}-${shuttle.route_long_name}`}>
                 <div className="col-span-2 flex min-w-0 items-center gap-2 md:col-span-1 md:gap-2.5 lg:gap-[11px]">
                 
                           <span style={{ backgroundColor: shuttle.route_color }} className="grid size-[42px] shrink-0 place-items-center rounded-lg bg-[#126b91] text-white"><span className="material-symbols-outlined inline-block scale-150 text-2xl leading-none">directions_bus</span></span>
 
                       <span className="flex min-w-0 flex-col gap-[5px]">
                     <span className="flex items-center gap-1.5 overflow-hidden font-['Space_Grotesk',sans-serif] text-xs leading-tight font-semibold whitespace-nowrap lg:text-sm">{shuttle.route_long_name}</span>
-                    <span className="overflow-hidden text-[11px] text-ellipsis whitespace-nowrap text-[#687780]">{shuttle.trip.stops?.at(-1)?.stop?.stop_desc ?? ""}</span>
+                    <span className="overflow-hidden text-[11px] text-ellipsis whitespace-nowrap text-[#687780]">{nextStop?.stop?.stop_desc ? `Next: ${nextStop.stop.stop_desc}` : ''}</span>
                   </span>
                 </div>
 
-                <div className="flex justify-start md:justify-center"><span className="inline-flex items-center gap-1 whitespace-nowrap rounded-[5px] bg-[#f1f5f3] px-2 py-[7px] text-[10px] font-semibold"> {shuttle.bay}</span></div>
-                <div className="flex flex-col items-start gap-1 md:items-center"><strong className="font-['Space_Grotesk',sans-serif] text-[15px] font-semibold tabular-nums">{shuttle.trip.departure_time}</strong><small className="hidden text-[9px] text-[#687780] md:block">Scheduled</small></div>
+                <div className="flex justify-start md:justify-center"><span className="inline-flex items-center gap-1 whitespace-nowrap rounded-[5px] bg-[#f1f5f3] px-2 py-[7px] text-[10px] font-semibold" title={shuttle.vehicle?.status ?? undefined}>{shuttle.vehicle?.label ?? (shuttle.vehicle?.id != null ? `#${shuttle.vehicle.id}` : shuttle.bay ?? '—')}</span></div>
+                <div className="flex flex-col items-start gap-1 md:items-center"><strong className="font-['Space_Grotesk',sans-serif] text-[15px] font-semibold tabular-nums">{nextStop?.departure_time ?? '—'}</strong><small className="hidden text-[9px] text-[#687780] md:block">Scheduled</small></div>
                 <div className={`flex flex-col items-end gap-[5px] ${shuttle.delayed ? 'text-[#a75a16]' : 'text-[#087a59]'}`}>
-                  <strong className="font-['Space_Grotesk',sans-serif] text-[25px] leading-[.9] font-semibold">{shuttle.trip.stops[0].minutes_away}<small className="font-['Work_Sans',sans-serif] text-[10px] font-semibold"> min</small></strong>
+                  <strong className="font-['Space_Grotesk',sans-serif] text-[25px] leading-[.9] font-semibold">—</strong>
                   <span className="inline-flex items-center gap-[5px] whitespace-nowrap text-[9px] font-bold uppercase">{!shuttle.delayed && <i className="size-1.5 rounded-full bg-current" />}{shuttle.status}</span>
                 </div>
                 <button className={`col-span-2 flex min-h-[34px] w-full items-center justify-center gap-0.5 rounded px-2 text-[10px] font-semibold whitespace-nowrap md:col-span-1 md:px-1 md:text-[9px] lg:px-2 lg:text-[10px] ${index === 0 ? 'bg-[#126b91] text-white' : 'bg-[#f1f5f3] text-[#192b35]'}`} type="button">
                   {index === 0 ? 'Selected' : 'View stops'}<span className="material-symbols-outlined text-base">chevron_right</span>
                 </button>
               </article>
-            ))}
+              )
+            })}
           </section>
 
           <aside className="flex flex-col gap-4 rounded-lg border border-[#dce4e5] bg-white p-3.5 sm:p-[17px] lg:sticky lg:top-[84px]" aria-label="Selected shuttle trip details">

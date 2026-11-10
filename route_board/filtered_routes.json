@@ -1,0 +1,698 @@
+[
+  {
+    "route_id": "1",
+    "route_short_name": "1",
+    "route_long_name": "Bronzeville/Union Station",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "10",
+    "route_short_name": "10",
+    "route_long_name": "Obama Presidential Center/Museum of Science & Industry Express ",
+    "route_color": "b71234"
+  },
+  {
+    "route_id": "100",
+    "route_short_name": "100",
+    "route_long_name": "Jeffery Manor Express",
+    "route_color": "b71234"
+  },
+  {
+    "route_id": "103",
+    "route_short_name": "103",
+    "route_long_name": "West 103rd",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "106",
+    "route_short_name": "106",
+    "route_long_name": "East 103rd",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "108",
+    "route_short_name": "108",
+    "route_long_name": "Halsted/95th",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "11",
+    "route_short_name": "11",
+    "route_long_name": "Lincoln",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "111",
+    "route_short_name": "111",
+    "route_long_name": "111th/King Drive",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "111A",
+    "route_short_name": "111A",
+    "route_long_name": "Pullman Shuttle",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "112",
+    "route_short_name": "112",
+    "route_long_name": "Vincennes/111th",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "115",
+    "route_short_name": "115",
+    "route_long_name": "Pullman/115th",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "119",
+    "route_short_name": "119",
+    "route_long_name": "Michigan/119th",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "12",
+    "route_short_name": "12",
+    "route_long_name": "Roosevelt",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "120",
+    "route_short_name": "120",
+    "route_long_name": "Ogilvie/Streeterville Express",
+    "route_color": "b71234"
+  },
+  {
+    "route_id": "121",
+    "route_short_name": "121",
+    "route_long_name": "Union/Streeterville Express",
+    "route_color": "b71234"
+  },
+  {
+    "route_id": "124",
+    "route_short_name": "124",
+    "route_long_name": "Navy Pier",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "125",
+    "route_short_name": "125",
+    "route_long_name": "Water Tower Express",
+    "route_color": "b71234"
+  },
+  {
+    "route_id": "126",
+    "route_short_name": "126",
+    "route_long_name": "Jackson",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "135",
+    "route_short_name": "135",
+    "route_long_name": "Clarendon/LaSalle Express",
+    "route_color": "b71234"
+  },
+  {
+    "route_id": "146",
+    "route_short_name": "146",
+    "route_long_name": "Inner Lake Shore/Michigan Express",
+    "route_color": "b71234"
+  },
+  {
+    "route_id": "147",
+    "route_short_name": "147",
+    "route_long_name": "Outer DuSable Lake Shore Express",
+    "route_color": "b71234"
+  },
+  {
+    "route_id": "148",
+    "route_short_name": "148",
+    "route_long_name": "Clarendon/Michigan Express",
+    "route_color": "b71234"
+  },
+  {
+    "route_id": "15",
+    "route_short_name": "15",
+    "route_long_name": "Jeffery Local",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "151",
+    "route_short_name": "151",
+    "route_long_name": "Sheridan",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "152",
+    "route_short_name": "152",
+    "route_long_name": "Addison",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "155",
+    "route_short_name": "155",
+    "route_long_name": "Devon",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "156",
+    "route_short_name": "156",
+    "route_long_name": "LaSalle",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "157",
+    "route_short_name": "157",
+    "route_long_name": "Streeterville/Taylor",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "165",
+    "route_short_name": "165",
+    "route_long_name": "West 65th",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "171",
+    "route_short_name": "171",
+    "route_long_name": "U. of Chicago/Hyde Park",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "172",
+    "route_short_name": "172",
+    "route_long_name": "U. of Chicago/Kenwood",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "18",
+    "route_short_name": "18",
+    "route_long_name": "16th/18th",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "20",
+    "route_short_name": "20",
+    "route_long_name": "Madison",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "201",
+    "route_short_name": "201",
+    "route_long_name": "Central/Ridge",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "206",
+    "route_short_name": "206",
+    "route_long_name": "Evanston Circulator",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "21",
+    "route_short_name": "21",
+    "route_long_name": "Cermak",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "22",
+    "route_short_name": "22",
+    "route_long_name": "Clark",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "24",
+    "route_short_name": "24",
+    "route_long_name": "Wentworth",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "26",
+    "route_short_name": "26",
+    "route_long_name": "South Shore Express",
+    "route_color": "b71234"
+  },
+  {
+    "route_id": "28",
+    "route_short_name": "28",
+    "route_long_name": "Stony Island",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "29",
+    "route_short_name": "29",
+    "route_long_name": "State",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "3",
+    "route_short_name": "3",
+    "route_long_name": "King Drive",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "30",
+    "route_short_name": "30",
+    "route_long_name": "South Chicago",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "31",
+    "route_short_name": "31",
+    "route_long_name": "31st",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "34",
+    "route_short_name": "34",
+    "route_long_name": "South Michigan",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "35",
+    "route_short_name": "35",
+    "route_long_name": "31st/35th",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "36",
+    "route_short_name": "36",
+    "route_long_name": "Broadway",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "37",
+    "route_short_name": "37",
+    "route_long_name": "Sedgwick",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "39",
+    "route_short_name": "39",
+    "route_long_name": "Pershing",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "4",
+    "route_short_name": "4",
+    "route_long_name": "Cottage Grove",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "43",
+    "route_short_name": "43",
+    "route_long_name": "43rd",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "44",
+    "route_short_name": "44",
+    "route_long_name": "Wallace/Racine",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "47",
+    "route_short_name": "47",
+    "route_long_name": "47th",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "48",
+    "route_short_name": "48",
+    "route_long_name": "South Damen",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "49",
+    "route_short_name": "49",
+    "route_long_name": "Western",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "49B",
+    "route_short_name": "49B",
+    "route_long_name": "North Western",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "50",
+    "route_short_name": "50",
+    "route_long_name": "Damen",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "51",
+    "route_short_name": "51",
+    "route_long_name": "51st",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "52",
+    "route_short_name": "52",
+    "route_long_name": "Kedzie",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "52A",
+    "route_short_name": "52A",
+    "route_long_name": "South Kedzie",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "53",
+    "route_short_name": "53",
+    "route_long_name": "Pulaski",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "53A",
+    "route_short_name": "53A",
+    "route_long_name": "South Pulaski",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "54",
+    "route_short_name": "54",
+    "route_long_name": "Cicero",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "54A",
+    "route_short_name": "54A",
+    "route_long_name": "North Cicero/Skokie Blvd.",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "54B",
+    "route_short_name": "54B",
+    "route_long_name": "South Cicero",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "55",
+    "route_short_name": "55",
+    "route_long_name": "Garfield",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "55N",
+    "route_short_name": "55N",
+    "route_long_name": "55th/Narragansett",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "56",
+    "route_short_name": "56",
+    "route_long_name": "Milwaukee",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "57",
+    "route_short_name": "57",
+    "route_long_name": "Laramie",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "59",
+    "route_short_name": "59",
+    "route_long_name": "59th/61st",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "6",
+    "route_short_name": "6",
+    "route_long_name": "Jackson Park Express",
+    "route_color": "b71234"
+  },
+  {
+    "route_id": "60",
+    "route_short_name": "60",
+    "route_long_name": "Blue Island/26th",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "62",
+    "route_short_name": "62",
+    "route_long_name": "Archer",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "62H",
+    "route_short_name": "62H",
+    "route_long_name": "Archer/Harlem",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "63",
+    "route_short_name": "63",
+    "route_long_name": "63rd",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "63W",
+    "route_short_name": "63W",
+    "route_long_name": "West 63rd",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "65",
+    "route_short_name": "65",
+    "route_long_name": "Grand",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "66",
+    "route_short_name": "66",
+    "route_long_name": "Chicago",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "67",
+    "route_short_name": "67",
+    "route_long_name": "67th/69th/71st",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "68",
+    "route_short_name": "68",
+    "route_long_name": "Northwest Highway",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "7",
+    "route_short_name": "7",
+    "route_long_name": "Harrison",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "70",
+    "route_short_name": "70",
+    "route_long_name": "Division",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "71",
+    "route_short_name": "71",
+    "route_long_name": "71st/South Shore",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "72",
+    "route_short_name": "72",
+    "route_long_name": "North",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "73",
+    "route_short_name": "73",
+    "route_long_name": "Armitage",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "74",
+    "route_short_name": "74",
+    "route_long_name": "Fullerton",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "75",
+    "route_short_name": "75",
+    "route_long_name": "74th/75th",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "76",
+    "route_short_name": "76",
+    "route_long_name": "Diversey",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "77",
+    "route_short_name": "77",
+    "route_long_name": "Belmont",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "78",
+    "route_short_name": "78",
+    "route_long_name": "Montrose",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "79",
+    "route_short_name": "79",
+    "route_long_name": "79th",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "8",
+    "route_short_name": "8",
+    "route_long_name": "Halsted",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "80",
+    "route_short_name": "80",
+    "route_long_name": "Irving Park",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "81",
+    "route_short_name": "81",
+    "route_long_name": "Lawrence",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "81W",
+    "route_short_name": "81W",
+    "route_long_name": "West Lawrence",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "82",
+    "route_short_name": "82",
+    "route_long_name": "Kimball/Homan",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "84",
+    "route_short_name": "84",
+    "route_long_name": "Peterson",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "85",
+    "route_short_name": "85",
+    "route_long_name": "Central",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "85A",
+    "route_short_name": "85A",
+    "route_long_name": "North Central",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "86",
+    "route_short_name": "86",
+    "route_long_name": "Narragansett/Ridgeland",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "87",
+    "route_short_name": "87",
+    "route_long_name": "87th",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "88",
+    "route_short_name": "88",
+    "route_long_name": "Higgins",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "8A",
+    "route_short_name": "8A",
+    "route_long_name": "South Halsted",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "9",
+    "route_short_name": "9",
+    "route_long_name": "Ashland",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "90",
+    "route_short_name": "90",
+    "route_long_name": "Harlem",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "91",
+    "route_short_name": "91",
+    "route_long_name": "Austin",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "92",
+    "route_short_name": "92",
+    "route_long_name": "Foster",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "93",
+    "route_short_name": "93",
+    "route_long_name": "California/Dodge",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "94",
+    "route_short_name": "94",
+    "route_long_name": "California",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "95",
+    "route_short_name": "95",
+    "route_long_name": "95th",
+    "route_color": "414145"
+  },
+  {
+    "route_id": "96",
+    "route_short_name": "96",
+    "route_long_name": "Lunt",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "97",
+    "route_short_name": "97",
+    "route_long_name": "Skokie",
+    "route_color": "99999C"
+  },
+  {
+    "route_id": "J14",
+    "route_short_name": "J14",
+    "route_long_name": "Jeffery Jump",
+    "route_color": "0065bd"
+  },
+  {
+    "route_id": "X4",
+    "route_short_name": "X4",
+    "route_long_name": "Cottage Grove Express",
+    "route_color": "b71234"
+  },
+  {
+    "route_id": "X49",
+    "route_short_name": "X49",
+    "route_long_name": "Western Express",
+    "route_color": "b71234"
+  },
+  {
+    "route_id": "X9",
+    "route_short_name": "X9",
+    "route_long_name": "Ashland Express",
+    "route_color": "b71234"
+  }
+]

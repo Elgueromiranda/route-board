@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { LiveClock } from '../components/LiveClock'
+
+const apiBase = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000').replace(/\/$/, '')
 
 type Stop = {
   stop_sequence: number
@@ -147,15 +149,20 @@ function etaFromTime(time: string | undefined, clock: Date) {
 
 export const Route = createFileRoute('/')({ component: Home })
 
+const ITEMS_PER_PAGE = 20
+
 function Home() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'on_time' | 'delayed'>('all')
+  const [currentPage, setCurrentPage] = useState(1)
   const [clock, setClock] = useState(() => new Date())
   const [selectedShuttleKey, setSelectedShuttleKey] = useState<string | null>(null)
+  const [hasManuallySelected, setHasManuallySelected] = useState(false)
+  const clockInitialized = useRef(false)
   const queryClient = useQueryClient()
 
   /* ------- trips list ------- */
-  const { data: shuttles = [] } = useQuery<Shuttle[]>({
+  const { data: shuttles = [], isLoading: tripsLoading } = useQuery<Shuttle[]>({
     queryKey: ['trips'],
     queryFn: async () => {
       const res = await fetch('http://localhost:3000/api/v1/trips')
@@ -177,16 +184,29 @@ function Home() {
       return true
     })
   }, [shuttles, normalizedSearch, statusFilter])
+  const totalPages = Math.ceil(filteredShuttles.length / ITEMS_PER_PAGE)
+  const safeCurrentPage = Math.min(currentPage, Math.max(totalPages, 1))
+  const paginatedShuttles = filteredShuttles.slice(
+    (safeCurrentPage - 1) * ITEMS_PER_PAGE,
+    safeCurrentPage * ITEMS_PER_PAGE,
+  )
 
-  const selectedShuttle =
-    filteredShuttles.find((s) => getShuttleKey(s) === selectedShuttleKey) ?? filteredShuttles[0]
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, statusFilter])
 
-  const selectedRouteId = selectedShuttle?.route_id
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) setCurrentPage(totalPages)
+  }, [currentPage, totalPages])
+
+  const manuallySelectedShuttle = filteredShuttles.find((s) => getShuttleKey(s) === selectedShuttleKey)
+  const selectedShuttle = manuallySelectedShuttle ?? filteredShuttles[0]
+  const selectedRouteId = manuallySelectedShuttle?.route_id
 
   /* ------- per-route estimate (Geoapify) ------- */
-  const { data: estimate, isError: estimateError } = useQuery<RouteEstimate>({
+  const { data: estimate, isError: estimateError, isFetching: estimateLoading } = useQuery<RouteEstimate>({
     queryKey: ['estimate', selectedRouteId],
-    enabled: !!selectedRouteId,
+    enabled: !!selectedRouteId && hasManuallySelected,
     queryFn: async () => {
       const res = await fetch(`http://localhost:3000/api/v1/routes/${selectedRouteId}/estimate`)
       if (!res.ok) throw new Error('Failed to fetch estimate')
@@ -203,6 +223,12 @@ function Home() {
     if (!estimateAvailable || !estimate?.duration_seconds) return {}
     return distributeEstimate(orderedStops, estimate.duration_seconds)
   }, [estimateAvailable, estimate?.duration_seconds, orderedStops])
+  const latestPassedIndex = orderedStops.reduce((latestIndex, stop, index) => {
+    const effectiveTime = estimatedBySeq[stop.stop_sequence] ?? stop.departure_time
+    const stopDate = scheduleDate(effectiveTime, clock)
+    return stopDate && stopDate < clock ? index : latestIndex
+  }, -1)
+  const visibleStops = latestPassedIndex > 0 ? orderedStops.slice(latestPassedIndex) : orderedStops
 
   /* ------- "next stop" uses estimated time when available ------- */
   const nextStop = useMemo(() => {
@@ -218,24 +244,61 @@ function Home() {
 
   /* ------- clock ------- */
   useEffect(() => {
+    if (clockInitialized.current || shuttles.length === 0) return
+
+    const earliestDeparture = shuttles
+      .flatMap((shuttle) => shuttle.trip.stops.map((stop) => stop.departure_time))
+      .filter((departure) => Number.isFinite(scheduleSeconds(departure)))
+      .sort((a, b) => scheduleSeconds(a) - scheduleSeconds(b))[0]
+    const parsed = earliestDeparture ? parseScheduleTime(earliestDeparture) : null
+    if (!parsed) return
+
+    const mockNow = new Date()
+    mockNow.setHours(parsed.hours, parsed.minutes - 5, 0, 0)
+    setClock(mockNow)
+    clockInitialized.current = true
+  }, [shuttles])
+
+  useEffect(() => {
     const timer = window.setInterval(() => setClock((c) => new Date(c.getTime() + 1000)), 1000)
     return () => window.clearInterval(timer)
   }, [])
 
   /* ------- SSE: invalidate trips + selected estimate ------- */
   useEffect(() => {
-    const es = new EventSource('http://localhost:3000/api/v1/trips/stream')
-    es.onmessage = (event) => {
+    let active = true
+    let eventSource: EventSource | null = null
+
+    async function connectToTripUpdates() {
       try {
-        const data = JSON.parse(event.data) as { trip_id?: string; route_id?: string }
-        if (data.trip_id) queryClient.invalidateQueries({ queryKey: ['trips'] })
-        if (data.route_id) queryClient.invalidateQueries({ queryKey: ['estimate', data.route_id] })
-      } catch {
-        /* ignore malformed */
+        const response = await fetch(`${apiBase}/api/v1/trips/updates`)
+        if (!response.ok) throw new Error('Unable to initialize live trip updates')
+        const { stream_url: streamUrl } = (await response.json()) as { stream_url: string }
+        if (!active) return
+
+        eventSource = new EventSource(`${apiBase}${streamUrl}`)
+        eventSource.addEventListener('update', (event) => {
+          try {
+            const data = JSON.parse((event as MessageEvent<string>).data) as {
+              trip_id?: string
+              route_id?: string
+            }
+            if (data.trip_id) queryClient.invalidateQueries({ queryKey: ['trips'] })
+            if (data.route_id) queryClient.invalidateQueries({ queryKey: ['estimate', data.route_id] })
+          } catch {
+            /* ignore malformed */
+          }
+        })
+      } catch (error) {
+        console.warn('Trip updates stream unavailable', error)
       }
     }
-    es.onerror = (err) => console.warn('SSE error, will auto-reconnect', err)
-    return () => es.close()
+
+    void connectToTripUpdates()
+    return () => {
+      active = false
+      eventSource?.close()
+    }
   }, [queryClient])
 
   /* ------- helper for a stop: scheduled vs estimated ------- */
@@ -336,14 +399,14 @@ function Home() {
               <span className="text-right">Route map</span>
             </div>
 
-            {filteredShuttles.map((shuttle) => {
+            {paginatedShuttles.map((shuttle) => {
               const stops = getOrderedStops(shuttle)
               const nowSec = clock.getHours() * 3600 + clock.getMinutes() * 60 + clock.getSeconds()
               const rowNext = stops.find((s) => {
                 const est = estimatedBySeq[s.stop_sequence] // only for selected; otherwise fall back
                 return scheduleSeconds(est ?? s.departure_time) >= nowSec
               })
-              const selected = selectedShuttle != null && getShuttleKey(shuttle) === getShuttleKey(selectedShuttle)
+              const selected = selectedShuttle != null && getShuttleKey(shuttle) === selectedShuttleKey
               const rowEffective = rowNext
                 ? estimatedBySeq[rowNext.stop_sequence] ?? rowNext.departure_time
                 : undefined
@@ -408,7 +471,10 @@ function Home() {
                       selected ? 'bg-[#126b91] text-white' : 'bg-[#f1f5f3] text-[#192b35]'
                     }`}
                     type="button"
-                    onClick={() => setSelectedShuttleKey(getShuttleKey(shuttle))}
+                    onClick={() => {
+                      setSelectedShuttleKey(getShuttleKey(shuttle))
+                      setHasManuallySelected(true)
+                    }}
                   >
                     {selected ? 'Selected' : 'View stops'}
                     <span className="material-symbols-outlined text-base">chevron_right</span>
@@ -416,12 +482,35 @@ function Home() {
                 </article>
               )
             })}
+            <nav className="mt-2 flex items-center justify-between border-t border-[#e5ebea] pt-3" aria-label="Route pages">
+              <button
+                className="rounded bg-[#f1f5f3] px-3 py-2 text-xs font-semibold text-[#192b35] hover:bg-[#e7eeea] disabled:cursor-not-allowed disabled:opacity-50"
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                disabled={safeCurrentPage <= 1}
+              >
+                Previous
+              </button>
+              <span className="text-xs font-semibold text-[#687780]" aria-live="polite">
+                Page {safeCurrentPage} of {totalPages || 1}
+              </span>
+              <button
+                className="rounded bg-[#f1f5f3] px-3 py-2 text-xs font-semibold text-[#192b35] hover:bg-[#e7eeea] disabled:cursor-not-allowed disabled:opacity-50"
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                disabled={totalPages === 0 || safeCurrentPage >= totalPages}
+              >
+                Next
+              </button>
+            </nav>
           </section>
 
           <aside
             className="flex flex-col gap-4 rounded-lg border border-[#dce4e5] bg-white p-3.5 sm:p-[17px] lg:sticky lg:top-[84px]"
             aria-label="Selected shuttle trip details"
           >
+            {selectedShuttle ? (
+              <>
             <div className="flex items-start justify-between gap-2.5">
               <div>
                 <span className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[.1em] text-[#126b91]">
@@ -459,7 +548,7 @@ function Home() {
               </div>
             </div>
 
-            {!estimateAvailable && (
+            {hasManuallySelected && selectedRouteId && !estimateAvailable && !estimateLoading && (
               <p className="m-0 rounded bg-[#fff6ea] px-2 py-1.5 text-[9px] text-[#a75a16]">
                 Road estimate unavailable — showing scheduled times.
               </p>
@@ -469,7 +558,7 @@ function Home() {
               <h3 className="mb-[15px] text-[9px] font-bold uppercase tracking-[.08em] text-[#687780]">Sequential stop milestones</h3>
               <div className="relative max-h-[224px] overflow-y-auto overscroll-contain pr-2 pl-[21px] [scrollbar-gutter:stable] before:absolute before:top-[9px] before:bottom-[10px] before:left-[6px] before:w-px before:bg-[#cbd7d6]">
                 {selectedShuttle &&
-                  orderedStops.map((stop) => {
+                  visibleStops.map((stop) => {
                     const times = stopTimes(stop)
                     const effective = times.effective
                     const scheduledDate = scheduleDate(effective, clock)
@@ -547,6 +636,20 @@ function Home() {
                 <span className="material-symbols-outlined text-[15px] text-[#126b91]">accessible</span>ADA ramp
               </span>
             </div>
+              </>
+            ) : (
+              <div className="grid min-h-[260px] place-items-center px-4 text-center">
+                <div>
+                  <span className="material-symbols-outlined mx-auto mb-2 grid size-10 place-items-center rounded bg-[#e7f2f5] text-xl text-[#126b91]">
+                    route
+                  </span>
+                  <h2 className="m-0 font-['Space_Grotesk',sans-serif] text-sm font-semibold">No route selected</h2>
+                  <p className="mb-0 mt-1 text-[11px] leading-relaxed text-[#687780]">
+                    Choose “View stops” on a route to load its live tracker.
+                  </p>
+                </div>
+              </div>
+            )}
           </aside>
         </div>
 

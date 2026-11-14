@@ -2,24 +2,27 @@
 class ArrivalEstimate
   Result = Struct.new(:stop_sequence, :stop_id, :scheduled, :estimated, :observed, keyword_init: true)
 
-  def self.for(trip_id, delay_minutes: 0)
-    new(trip_id, delay_minutes: delay_minutes).call
+  def self.for(trip_id, delay_minutes: 0, stops: nil, events: nil)
+    new(trip_id, delay_minutes: delay_minutes, stops: stops, events: events).call
   end
 
-  def initialize(trip_id, delay_minutes: 0)
+  def initialize(trip_id, delay_minutes: 0, stops: nil, events: nil)
     @trip_id = trip_id
     @delay   = delay_minutes.to_i
+    @stops = stops
+    @events = events
   end
 
   def call
-    stops = RouteStop.where(trip_id: @trip_id).order(:stop_sequence).to_a
+    stops = @stops || RouteStop.where(trip_id: @trip_id).order(:stop_sequence).to_a
     return [] if stops.empty?
 
-    observed_by_stop = TripEvent.where(gtfs_trip_id: @trip_id, event_type: "arrived")
-                                .where.not(stop_id: nil)
-                                .order(:sequence)
-                                .pluck(:stop_id, :occurred_at)
-                                .to_h
+    events = @events || TripEvent.where(gtfs_trip_id: @trip_id, event_type: "arrived")
+                                 .where.not(stop_id: nil)
+                                 .order(:sequence)
+                                 .to_a
+    observed_by_stop = events.select { |event| event.event_type == "arrived" && event.stop_id }
+                             .to_h { |event| [event.stop_id, event.occurred_at] }
 
     stops.map do |rs|
       scheduled_sec = schedule_seconds(rs.departure_time)

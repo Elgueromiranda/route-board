@@ -1,24 +1,38 @@
-# README
+# RouteBoard
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+## Development
 
-Things you may want to cover:
+Pollen uses Redis Pub/Sub and a persisted stream record. Start Redis in its own terminal:
 
-* Ruby version
+```sh
+redis-server
+```
 
-* System dependencies
+From `route_board/`, install dependencies and prepare the database:
 
-* Configuration
+```sh
+bundle install
+bin/rails db:prepare
+```
 
-* Database creation
+Start Rails with Pollen enabled:
 
-* Database initialization
+```sh
+START_POLLEN=true bin/rails s
+```
 
-* How to run the test suite
+From `route-board/`, start the frontend separately:
 
-* Services (job queues, cache servers, search engines, etc.)
+```sh
+npm run dev
+```
 
-* Deployment instructions
+Pollen runs inside the Rails server process; there is no `bundle exec pollen` command. To use a non-default Redis URL locally, set `REDIS_URL` before starting Rails. Production reads `redis_url` from Rails credentials and enables Pollen through the deployment environment.
 
-* ...
+## Database
+
+Pollen's migration adds the persisted stream table. Apply migrations with `bin/rails db:prepare` after deploying schema changes.
+
+## Tests
+
+Run the Rails tests with `bin/rails test` from `route_board/`.

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_14_013237) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_14_193644) do
   create_table "audit_events", force: :cascade do |t|
     t.string "actor", null: false
     t.string "action", null: false
@@ -32,6 +32,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_14_013237) do
     t.boolean "sunday", default: false
     t.date "start_date"
     t.date "end_date"
+  end
+
+  create_table "pollen_streams", id: :string, force: :cascade do |t|
+    t.string "owner_id"
+    t.text "payload"
+    t.integer "status", default: 0, null: false
+    t.integer "timeout", default: 120, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["owner_id"], name: "index_pollen_streams_on_owner_id"
   end
 
   create_table "route_stops", id: false, force: :cascade do |t|

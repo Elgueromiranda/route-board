@@ -20112,904 +20112,1204 @@
   ],
   "vehicles": [
     {
+      "id": 1,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.676Z",
+      "updated_at": "2026-11-06T12:48:33.676Z",
+      "route_id": "119"
     },
     {
+      "id": 2,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.685Z",
+      "updated_at": "2026-11-06T12:48:33.685Z",
+      "route_id": "172"
     },
     {
+      "id": 3,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.687Z",
+      "updated_at": "2026-11-06T12:48:33.687Z",
+      "route_id": "206"
     },
     {
+      "id": 4,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.688Z",
+      "updated_at": "2026-11-06T12:48:33.688Z",
+      "route_id": null
     },
     {
+      "id": 5,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.690Z",
+      "updated_at": "2026-11-06T12:48:33.690Z",
+      "route_id": "60"
     },
     {
+      "id": 6,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.691Z",
+      "updated_at": "2026-11-06T12:48:33.691Z",
+      "route_id": "81"
     },
     {
+      "id": 7,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.692Z",
+      "updated_at": "2026-11-06T12:48:33.692Z",
+      "route_id": "124"
     },
     {
+      "id": 8,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.693Z",
+      "updated_at": "2026-11-06T12:48:33.693Z",
+      "route_id": "52"
     },
     {
+      "id": 9,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.694Z",
+      "updated_at": "2026-11-06T12:48:33.694Z",
+      "route_id": "78"
     },
     {
+      "id": 10,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.695Z",
+      "updated_at": "2026-11-06T12:48:33.695Z",
+      "route_id": "53"
     },
     {
+      "id": 11,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.697Z",
+      "updated_at": "2026-11-06T12:48:33.697Z",
+      "route_id": "20"
     },
     {
+      "id": 12,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.698Z",
+      "updated_at": "2026-11-06T12:48:33.698Z",
+      "route_id": "146"
     },
     {
+      "id": 13,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.699Z",
+      "updated_at": "2026-11-06T12:48:33.699Z",
+      "route_id": "44"
     },
     {
+      "id": 14,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.700Z",
+      "updated_at": "2026-11-06T12:48:33.700Z",
+      "route_id": "125"
     },
     {
+      "id": 15,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.701Z",
+      "updated_at": "2026-11-06T12:48:33.701Z",
+      "route_id": "77"
     },
     {
+      "id": 16,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.702Z",
+      "updated_at": "2026-11-06T12:48:33.702Z",
+      "route_id": "68"
     },
     {
+      "id": 17,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.703Z",
+      "updated_at": "2026-11-06T12:48:33.703Z",
+      "route_id": "54"
     },
     {
+      "id": 18,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.705Z",
+      "updated_at": "2026-11-06T12:48:33.705Z",
+      "route_id": null
     },
     {
+      "id": 19,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.706Z",
+      "updated_at": "2026-11-06T12:48:33.706Z",
+      "route_id": "59"
     },
     {
+      "id": 20,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.707Z",
+      "updated_at": "2026-11-06T12:48:33.707Z",
+      "route_id": "87"
     },
     {
+      "id": 21,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.708Z",
+      "updated_at": "2026-11-06T12:48:33.708Z",
+      "route_id": "J14"
     },
     {
+      "id": 22,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.709Z",
+      "updated_at": "2026-11-06T12:48:33.709Z",
+      "route_id": "12"
     },
     {
+      "id": 23,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.710Z",
+      "updated_at": "2026-11-06T12:48:33.710Z",
+      "route_id": "151"
     },
     {
+      "id": 24,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.711Z",
+      "updated_at": "2026-11-06T12:48:33.711Z",
+      "route_id": "108"
     },
     {
+      "id": 25,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.713Z",
+      "updated_at": "2026-11-06T12:48:33.713Z",
+      "route_id": null
     },
     {
+      "id": 26,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.714Z",
+      "updated_at": "2026-11-06T12:48:33.714Z",
+      "route_id": "47"
     },
     {
+      "id": 27,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.715Z",
+      "updated_at": "2026-11-06T12:48:33.715Z",
+      "route_id": null
     },
     {
+      "id": 28,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.717Z",
+      "updated_at": "2026-11-06T12:48:33.717Z",
+      "route_id": null
     },
     {
+      "id": 29,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.718Z",
+      "updated_at": "2026-11-06T12:48:33.718Z",
+      "route_id": "70"
     },
     {
+      "id": 30,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.719Z",
+      "updated_at": "2026-11-06T12:48:33.719Z",
+      "route_id": "48"
     },
     {
+      "id": 31,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.720Z",
+      "updated_at": "2026-11-06T12:48:33.720Z",
+      "route_id": null
     },
     {
+      "id": 32,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.721Z",
+      "updated_at": "2026-11-06T12:48:33.721Z",
+      "route_id": "157"
     },
     {
+      "id": 33,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.722Z",
+      "updated_at": "2026-11-06T12:48:33.722Z",
+      "route_id": "62"
     },
     {
+      "id": 34,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.723Z",
+      "updated_at": "2026-11-06T12:48:33.723Z",
+      "route_id": "1"
     },
     {
+      "id": 35,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.724Z",
+      "updated_at": "2026-11-06T12:48:33.724Z",
+      "route_id": "86"
     },
     {
+      "id": 36,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.725Z",
+      "updated_at": "2026-11-06T12:48:33.725Z",
+      "route_id": "96"
     },
     {
+      "id": 37,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.726Z",
+      "updated_at": "2026-11-06T12:48:33.726Z",
+      "route_id": "X49"
     },
     {
+      "id": 38,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.728Z",
+      "updated_at": "2026-11-06T12:48:33.728Z",
+      "route_id": "103"
     },
     {
+      "id": 39,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.729Z",
+      "updated_at": "2026-11-06T12:48:33.729Z",
+      "route_id": "54A"
     },
     {
+      "id": 40,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.730Z",
+      "updated_at": "2026-11-06T12:48:33.730Z",
+      "route_id": null
     },
     {
+      "id": 41,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.731Z",
+      "updated_at": "2026-11-06T12:48:33.731Z",
+      "route_id": null
     },
     {
+      "id": 42,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.732Z",
+      "updated_at": "2026-11-06T12:48:33.732Z",
+      "route_id": "79"
     },
     {
+      "id": 43,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.733Z",
+      "updated_at": "2026-11-06T12:48:33.733Z",
+      "route_id": "85"
     },
     {
+      "id": 44,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.734Z",
+      "updated_at": "2026-11-06T12:48:33.734Z",
+      "route_id": "76"
     },
     {
+      "id": 45,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.735Z",
+      "updated_at": "2026-11-06T12:48:33.735Z",
+      "route_id": null
     },
     {
+      "id": 46,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.736Z",
+      "updated_at": "2026-11-06T12:48:33.736Z",
+      "route_id": null
     },
     {
+      "id": 47,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.737Z",
+      "updated_at": "2026-11-06T12:48:33.737Z",
+      "route_id": "34"
     },
     {
+      "id": 48,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.739Z",
+      "updated_at": "2026-11-06T12:48:33.739Z",
+      "route_id": "3"
     },
     {
+      "id": 49,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.740Z",
+      "updated_at": "2026-11-06T12:48:33.740Z",
+      "route_id": null
     },
     {
+      "id": 50,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.741Z",
+      "updated_at": "2026-11-06T12:48:33.741Z",
+      "route_id": "21"
     },
     {
+      "id": 51,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.742Z",
+      "updated_at": "2026-11-06T12:48:33.742Z",
+      "route_id": "49B"
     },
     {
+      "id": 52,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.743Z",
+      "updated_at": "2026-11-06T12:48:33.743Z",
+      "route_id": "156"
     },
     {
+      "id": 53,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.744Z",
+      "updated_at": "2026-11-06T12:48:33.744Z",
+      "route_id": null
     },
     {
+      "id": 54,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.746Z",
+      "updated_at": "2026-11-06T12:48:33.746Z",
+      "route_id": "66"
     },
     {
+      "id": 55,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.747Z",
+      "updated_at": "2026-11-06T12:48:33.747Z",
+      "route_id": null
     },
     {
+      "id": 56,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.748Z",
+      "updated_at": "2026-11-06T12:48:33.748Z",
+      "route_id": "31"
     },
     {
+      "id": 57,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.749Z",
+      "updated_at": "2026-11-06T12:48:33.749Z",
+      "route_id": "51"
     },
     {
+      "id": 58,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.750Z",
+      "updated_at": "2026-11-06T12:48:33.750Z",
+      "route_id": "85A"
     },
     {
+      "id": 59,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.751Z",
+      "updated_at": "2026-11-06T12:48:33.751Z",
+      "route_id": "148"
     },
     {
+      "id": 60,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.752Z",
+      "updated_at": "2026-11-06T12:48:33.752Z",
+      "route_id": null
     },
     {
+      "id": 61,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.753Z",
+      "updated_at": "2026-11-06T12:48:33.753Z",
+      "route_id": null
     },
     {
+      "id": 62,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.754Z",
+      "updated_at": "2026-11-06T12:48:33.754Z",
+      "route_id": null
     },
     {
+      "id": 63,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.755Z",
+      "updated_at": "2026-11-06T12:48:33.755Z",
+      "route_id": "49"
     },
     {
+      "id": 64,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.756Z",
+      "updated_at": "2026-11-06T12:48:33.756Z",
+      "route_id": "24"
     },
     {
+      "id": 65,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.757Z",
+      "updated_at": "2026-11-06T12:48:33.757Z",
+      "route_id": "84"
     },
     {
+      "id": 66,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.759Z",
+      "updated_at": "2026-11-06T12:48:33.759Z",
+      "route_id": "10"
     },
     {
+      "id": 67,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.760Z",
+      "updated_at": "2026-11-06T12:48:33.760Z",
+      "route_id": "28"
     },
     {
+      "id": 68,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.761Z",
+      "updated_at": "2026-11-06T12:48:33.761Z",
+      "route_id": "15"
     },
     {
+      "id": 69,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.762Z",
+      "updated_at": "2026-11-06T12:48:33.762Z",
+      "route_id": "74"
     },
     {
+      "id": 70,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.763Z",
+      "updated_at": "2026-11-06T12:48:33.763Z",
+      "route_id": "155"
     },
     {
+      "id": 71,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.764Z",
+      "updated_at": "2026-11-06T12:48:33.764Z",
+      "route_id": null
     },
     {
+      "id": 72,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.765Z",
+      "updated_at": "2026-11-06T12:48:33.765Z",
+      "route_id": "115"
     },
     {
+      "id": 73,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.766Z",
+      "updated_at": "2026-11-06T12:48:33.766Z",
+      "route_id": null
     },
     {
+      "id": 74,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.767Z",
+      "updated_at": "2026-11-06T12:48:33.767Z",
+      "route_id": "57"
     },
     {
+      "id": 75,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.768Z",
+      "updated_at": "2026-11-06T12:48:33.768Z",
+      "route_id": "111"
     },
     {
+      "id": 76,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.769Z",
+      "updated_at": "2026-11-06T12:48:33.769Z",
+      "route_id": "11"
     },
     {
+      "id": 77,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.770Z",
+      "updated_at": "2026-11-06T12:48:33.770Z",
+      "route_id": "88"
     },
     {
+      "id": 78,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.772Z",
+      "updated_at": "2026-11-06T12:48:33.772Z",
+      "route_id": "30"
     },
     {
+      "id": 79,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.773Z",
+      "updated_at": "2026-11-06T12:48:33.773Z",
+      "route_id": "52A"
     },
     {
+      "id": 80,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.774Z",
+      "updated_at": "2026-11-06T12:48:33.774Z",
+      "route_id": "36"
     },
     {
+      "id": 81,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.775Z",
+      "updated_at": "2026-11-06T12:48:33.775Z",
+      "route_id": "100"
     },
     {
+      "id": 82,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.776Z",
+      "updated_at": "2026-11-06T12:48:33.776Z",
+      "route_id": null
     },
     {
+      "id": 83,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.777Z",
+      "updated_at": "2026-11-06T12:48:33.777Z",
+      "route_id": "29"
     },
     {
+      "id": 84,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.778Z",
+      "updated_at": "2026-11-06T12:48:33.778Z",
+      "route_id": "93"
     },
     {
+      "id": 85,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.779Z",
+      "updated_at": "2026-11-06T12:48:33.779Z",
+      "route_id": "112"
     },
     {
+      "id": 86,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.780Z",
+      "updated_at": "2026-11-06T12:48:33.780Z",
+      "route_id": "91"
     },
     {
+      "id": 87,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.781Z",
+      "updated_at": "2026-11-06T12:48:33.781Z",
+      "route_id": "55N"
     },
     {
+      "id": 88,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.782Z",
+      "updated_at": "2026-11-06T12:48:33.782Z",
+      "route_id": "26"
     },
     {
+      "id": 89,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.783Z",
+      "updated_at": "2026-11-06T12:48:33.783Z",
+      "route_id": "111A"
     },
     {
+      "id": 90,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.784Z",
+      "updated_at": "2026-11-06T12:48:33.784Z",
+      "route_id": "90"
     },
     {
+      "id": 91,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.786Z",
+      "updated_at": "2026-11-06T12:48:33.786Z",
+      "route_id": "67"
     },
     {
+      "id": 92,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.787Z",
+      "updated_at": "2026-11-06T12:48:33.787Z",
+      "route_id": "X4"
     },
     {
+      "id": 93,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.788Z",
+      "updated_at": "2026-11-06T12:48:33.788Z",
+      "route_id": "37"
     },
     {
+      "id": 94,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.789Z",
+      "updated_at": "2026-11-06T12:48:33.789Z",
+      "route_id": "165"
     },
     {
+      "id": 95,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.790Z",
+      "updated_at": "2026-11-06T12:48:33.790Z",
+      "route_id": "82"
     },
     {
+      "id": 96,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.791Z",
+      "updated_at": "2026-11-06T12:48:33.791Z",
+      "route_id": "71"
     },
     {
+      "id": 97,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.792Z",
+      "updated_at": "2026-11-06T12:48:33.792Z",
+      "route_id": "63"
     },
     {
+      "id": 98,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.793Z",
+      "updated_at": "2026-11-06T12:48:33.793Z",
+      "route_id": null
     },
     {
+      "id": 99,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.794Z",
+      "updated_at": "2026-11-06T12:48:33.794Z",
+      "route_id": "81W"
     },
     {
+      "id": 100,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.795Z",
+      "updated_at": "2026-11-06T12:48:33.795Z",
+      "route_id": "55"
     },
     {
+      "id": 101,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.796Z",
+      "updated_at": "2026-11-06T12:48:33.796Z",
+      "route_id": "35"
     },
     {
+      "id": 102,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.798Z",
+      "updated_at": "2026-11-06T12:48:33.798Z",
+      "route_id": "135"
     },
     {
+      "id": 103,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.799Z",
+      "updated_at": "2026-11-06T12:48:33.799Z",
+      "route_id": "171"
     },
     {
+      "id": 104,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.800Z",
+      "updated_at": "2026-11-06T12:48:33.800Z",
+      "route_id": "126"
     },
     {
+      "id": 105,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.801Z",
+      "updated_at": "2026-11-06T12:48:33.801Z",
+      "route_id": null
     },
     {
+      "id": 106,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.802Z",
+      "updated_at": "2026-11-06T12:48:33.802Z",
+      "route_id": null
     },
     {
+      "id": 107,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.803Z",
+      "updated_at": "2026-11-06T12:48:33.803Z",
+      "route_id": "7"
     },
     {
+      "id": 108,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.804Z",
+      "updated_at": "2026-11-06T12:48:33.804Z",
+      "route_id": "X9"
     },
     {
+      "id": 109,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.805Z",
+      "updated_at": "2026-11-06T12:48:33.805Z",
+      "route_id": null
     },
     {
+      "id": 110,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.806Z",
+      "updated_at": "2026-11-06T12:48:33.806Z",
+      "route_id": null
     },
     {
+      "id": 111,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.807Z",
+      "updated_at": "2026-11-06T12:48:33.807Z",
+      "route_id": null
     },
     {
+      "id": 112,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.808Z",
+      "updated_at": "2026-11-06T12:48:33.808Z",
+      "route_id": "43"
     },
     {
+      "id": 113,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.809Z",
+      "updated_at": "2026-11-06T12:48:33.809Z",
+      "route_id": "4"
     },
     {
+      "id": 114,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.810Z",
+      "updated_at": "2026-11-06T12:48:33.810Z",
+      "route_id": "147"
     },
     {
+      "id": 115,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.811Z",
+      "updated_at": "2026-11-06T12:48:33.811Z",
+      "route_id": "201"
     },
     {
+      "id": 116,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.812Z",
+      "updated_at": "2026-11-06T12:48:33.812Z",
+      "route_id": "94"
     },
     {
+      "id": 117,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.814Z",
+      "updated_at": "2026-11-06T12:48:33.814Z",
+      "route_id": "50"
     },
     {
+      "id": 118,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.815Z",
+      "updated_at": "2026-11-06T12:48:33.815Z",
+      "route_id": null
     },
     {
+      "id": 119,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.816Z",
+      "updated_at": "2026-11-06T12:48:33.816Z",
+      "route_id": "92"
     },
     {
+      "id": 120,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.817Z",
+      "updated_at": "2026-11-06T12:48:33.817Z",
+      "route_id": null
     },
     {
+      "id": 121,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.818Z",
+      "updated_at": "2026-11-06T12:48:33.818Z",
+      "route_id": null
     },
     {
+      "id": 122,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.819Z",
+      "updated_at": "2026-11-06T12:48:33.819Z",
+      "route_id": "72"
     },
     {
+      "id": 123,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.820Z",
+      "updated_at": "2026-11-06T12:48:33.820Z",
+      "route_id": "65"
     },
     {
+      "id": 124,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.821Z",
+      "updated_at": "2026-11-06T12:48:33.821Z",
+      "route_id": "62H"
     },
     {
+      "id": 125,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.822Z",
+      "updated_at": "2026-11-06T12:48:33.822Z",
+      "route_id": null
     },
     {
+      "id": 126,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.823Z",
+      "updated_at": "2026-11-06T12:48:33.823Z",
+      "route_id": "8"
     },
     {
+      "id": 127,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.824Z",
+      "updated_at": "2026-11-06T12:48:33.824Z",
+      "route_id": "120"
     },
     {
+      "id": 128,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.825Z",
+      "updated_at": "2026-11-06T12:48:33.825Z",
+      "route_id": "152"
     },
     {
+      "id": 129,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.826Z",
+      "updated_at": "2026-11-06T12:48:33.826Z",
+      "route_id": "54B"
     },
     {
+      "id": 130,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.827Z",
+      "updated_at": "2026-11-06T12:48:33.827Z",
+      "route_id": "63W"
     },
     {
+      "id": 131,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.828Z",
+      "updated_at": "2026-11-06T12:48:33.828Z",
+      "route_id": "9"
     },
     {
+      "id": 132,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.829Z",
+      "updated_at": "2026-11-06T12:48:33.829Z",
+      "route_id": "106"
     },
     {
+      "id": 133,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.830Z",
+      "updated_at": "2026-11-06T12:48:33.830Z",
+      "route_id": null
     },
     {
+      "id": 134,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.831Z",
+      "updated_at": "2026-11-06T12:48:33.831Z",
+      "route_id": "22"
     },
     {
+      "id": 135,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.832Z",
+      "updated_at": "2026-11-06T12:48:33.832Z",
+      "route_id": null
     },
     {
+      "id": 136,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.834Z",
+      "updated_at": "2026-11-06T12:48:33.834Z",
+      "route_id": "121"
     },
     {
+      "id": 137,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.835Z",
+      "updated_at": "2026-11-06T12:48:33.835Z",
+      "route_id": "39"
     },
     {
+      "id": 138,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.836Z",
+      "updated_at": "2026-11-06T12:48:33.836Z",
+      "route_id": "75"
     },
     {
+      "id": 139,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.837Z",
+      "updated_at": "2026-11-06T12:48:33.837Z",
+      "route_id": "6"
     },
     {
+      "id": 140,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.838Z",
+      "updated_at": "2026-11-06T12:48:33.838Z",
+      "route_id": "95"
     },
     {
+      "id": 141,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.839Z",
+      "updated_at": "2026-11-06T12:48:33.839Z",
+      "route_id": null
     },
     {
+      "id": 142,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.840Z",
+      "updated_at": "2026-11-06T12:48:33.840Z",
+      "route_id": "8A"
     },
     {
+      "id": 143,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.841Z",
+      "updated_at": "2026-11-06T12:48:33.841Z",
+      "route_id": null
     },
     {
+      "id": 144,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.842Z",
+      "updated_at": "2026-11-06T12:48:33.842Z",
+      "route_id": "73"
     },
     {
+      "id": 145,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.843Z",
+      "updated_at": "2026-11-06T12:48:33.843Z",
+      "route_id": "97"
     },
     {
+      "id": 146,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.844Z",
+      "updated_at": "2026-11-06T12:48:33.844Z",
+      "route_id": "80"
     },
     {
+      "id": 147,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.845Z",
+      "updated_at": "2026-11-06T12:48:33.845Z",
+      "route_id": "18"
     },
     {
+      "id": 148,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.846Z",
+      "updated_at": "2026-11-06T12:48:33.846Z",
+      "route_id": "53A"
     },
     {
+      "id": 149,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.847Z",
+      "updated_at": "2026-11-06T12:48:33.847Z",
+      "route_id": null
     },
     {
+      "id": 150,
       "label": null,
       "status": "available",
-      "created_at": "2026-11-06 12:48:33 UTC",
-      "updated_at": "2026-11-06 12:48:33 UTC"
+      "created_at": "2026-11-06T12:48:33.848Z",
+      "updated_at": "2026-11-06T12:48:33.848Z",
+      "route_id": "56"
     }
   ],
   "route_stops": [
@@ -42173,5 +42473,7 @@
       "route_id": "8",
       "service_id": "68201"
     }
-  ]
+  ],
+  "trip_events": [],
+  "audit_events": []
 }

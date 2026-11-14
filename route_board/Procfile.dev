@@ -1,0 +1,1 @@
+web: START_POLLEN=true bin/rails server

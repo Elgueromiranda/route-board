@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RouteBoard sign-in</title>
+  </head>
+  <body>
+    <p><%= @auth_result == "success" ? "Signed in. This window will close." : "Sign-in failed. This window will close." %></p>
+    <script>
+      if (window.opener) {
+        window.opener.postMessage(
+          { type: "routeboard-auth", status: <%= raw json_escape(@auth_result.to_json) %> },
+          <%= raw json_escape(@frontend_origin.to_json) %>
+        );
+      }
+      window.close();
+    </script>
+  </body>
+</html>

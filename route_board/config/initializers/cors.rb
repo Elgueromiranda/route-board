@@ -7,14 +7,15 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-origins ENV.fetch('CORS_ORIGINS', '')
-              .split(',')
-              .map(&:strip)
-              .reject(&:empty?)
+    origins ENV.fetch('CORS_ORIGINS', 'http://localhost:5173')
+      .split(',')
+      .map(&:strip)
+      .reject(&:empty?)
     
     resource '*',
       headers: :any,
       methods: [:get, :post, :put, :patch, :delete, :options, :head],
+      credentials: true,
       expose: %w[Location X-Request-Id],
       max_age: 86400
   end

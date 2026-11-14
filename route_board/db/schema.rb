@@ -10,7 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_10_180743) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_14_013237) do
+  create_table "audit_events", force: :cascade do |t|
+    t.string "actor", null: false
+    t.string "action", null: false
+    t.string "subject_type", null: false
+    t.string "subject_id", null: false
+    t.json "changes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["subject_type", "subject_id"], name: "index_audit_events_on_subject_type_and_subject_id"
+  end
+
   create_table "calendars", primary_key: "service_id", id: :string, force: :cascade do |t|
     t.boolean "monday", default: false
     t.boolean "tuesday", default: false
@@ -49,10 +60,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_10_180743) do
     t.string "stop_lon"
   end
 
+  create_table "trip_events", force: :cascade do |t|
+    t.string "gtfs_trip_id", null: false
+    t.string "event_type", null: false
+    t.string "stop_id"
+    t.datetime "occurred_at", null: false
+    t.integer "delay_minutes", default: 0, null: false
+    t.json "payload"
+    t.bigint "sequence", null: false
+    t.string "actor"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["gtfs_trip_id", "sequence"], name: "index_trip_events_on_gtfs_trip_id_and_sequence"
+    t.index ["sequence"], name: "index_trip_events_on_sequence", unique: true
+  end
+
   create_table "trips", id: false, force: :cascade do |t|
     t.string "route_id"
     t.string "service_id"
     t.string "trip_id"
+    t.string "route_name"
+    t.string "destination"
+    t.string "vehicle_label"
+    t.text "stops_json", default: "[]", null: false
+    t.integer "next_stop_index", default: 0, null: false
+    t.boolean "departed", default: false, null: false
+    t.string "status", default: "Scheduled", null: false
   end
 
   create_table "vehicles", force: :cascade do |t|

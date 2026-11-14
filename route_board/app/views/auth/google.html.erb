@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sign in to RouteBoard</title>
+  </head>
+  <body>
+    <main>
+      <h1>Sign in to RouteBoard</h1>
+      <p>Opening Google sign-in...</p>
+      <%= form_with url: "/auth/google_oauth2", method: :post, id: "google-sign-in" do %>
+        <%= submit_tag "Continue with Google" %>
+      <% end %>
+    </main>
+    <script>
+      document.getElementById("google-sign-in")?.requestSubmit();
+    </script>
+  </body>
+</html>

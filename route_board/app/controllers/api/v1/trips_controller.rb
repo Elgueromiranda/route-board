@@ -20,17 +20,6 @@ module Api
           trip_stops = stops.select { |route_stop| route_stop.trip_id == trip_id }
           events = events_by_trip.fetch(trip_id, [])
           state = TripEvent.state_for(trip_id, events: events)
-          estimate = if trip_id
-            ArrivalEstimate.for(
-              trip_id,
-              delay_minutes: state[:delay_minutes],
-              stops: trip_stops,
-              events: events
-            )
-          else
-            []
-          end
-          estimates_by_sequence = estimate.index_by(&:stop_sequence)
 
           {
             route_id: route.route_id,
@@ -38,20 +27,19 @@ module Api
             route_long_name: route.route_long_name,
             route_color: route.route_color.present? ? "##{route.route_color.delete_prefix('#')}" : nil,
             vehicle: route.vehicle && { id: route.vehicle.id, label: route.vehicle.label, status: route.vehicle.status },
-            bay: nil,
-            delayed: state[:status] == "delayed",
             status: state[:status],
             trip: {
               trip_id: trip_id,
               service_id: trip_stops.first&.service_id,
               delay_minutes: state[:delay_minutes],
               stops: trip_stops.map { |route_stop|
-                est = estimates_by_sequence[route_stop.stop_sequence]
+                # Parse the string "14:30:37" and format to "2:30 PM"
+                parsed_time = route_stop.departure_time.present? ? Time.parse(route_stop.departure_time) : nil
+                formatted_time = parsed_time&.strftime("%-I:%M %p")
+
                 {
                   stop_sequence: route_stop.stop_sequence,
-                  departure_time: route_stop.departure_time,
-                  estimated_time: est&.estimated,
-                  observed_time: est&.observed,
+                  departure_time: formatted_time,
                   stop: {
                     stop_id: route_stop.stop&.stop_id,
                     stop_name: route_stop.stop&.stop_name,

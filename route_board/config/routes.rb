@@ -10,6 +10,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       # public board
       get "trips",        to: "trips#index"
+      get "trips/estimates", to: "trips#estimates"
       get "trips/updates", to: "trip_updates#show"
 
       # per-route Geoapify estimate

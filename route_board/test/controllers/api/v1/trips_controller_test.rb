@@ -42,14 +42,26 @@ class Api::V1::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 51, response.parsed_body.length
   end
 
-  test "trip updates endpoint returns the public Pollen stream URL" do
+  test "index returns the assigned vehicle label for a route" do
+    create_route_with_stops("route-vehicle", "trip-vehicle", ["stop-vehicle"])
+    Vehicle.create!(route_id: "route-vehicle", label: "Shuttle 204")
+
+    get "/api/v1/trips"
+
+    assert_response :success
+    route = response.parsed_body.find { |item| item["route_id"] == "route-vehicle" }
+    assert_equal "Shuttle 204", route.dig("vehicle", "label")
+  end
+
+  test "trip updates endpoint returns a Pollen stream ID with an intercepted route" do
     create_route_with_stops("route-stream", "trip-stream", ["stop-stream"])
 
     get "/api/v1/trips/updates"
 
     assert_response :success
-    stream_id = response.parsed_body.fetch("stream_url").split("/").last
+    stream_id = response.parsed_body.fetch("stream_id")
     assert_match Pollen::ServerConfiguration::UUID_REGEXP, stream_id
+    assert_match Pollen.server.configuration.route_regexp, "/pollens/streams/#{stream_id}"
     assert_equal "route-stream", Pollen::Stream.find(stream_id).owner_id
   end
 

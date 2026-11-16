@@ -5,7 +5,7 @@ module Api
         stream = TripUpdatesStream.fetch
         return head :service_unavailable unless stream
 
-        render json: { stream_url: "/pollen/streams/#{stream.id}" }
+        render json: { stream_id: stream.id }
       end
     end
   end

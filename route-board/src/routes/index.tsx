@@ -273,10 +273,10 @@ function Home() {
       try {
         const response = await fetch(`${apiBase}/api/v1/trips/updates`)
         if (!response.ok) throw new Error('Unable to initialize live trip updates')
-        const { stream_url: streamUrl } = (await response.json()) as { stream_url: string }
+        const { stream_id: streamId } = (await response.json()) as { stream_id: string }
         if (!active) return
 
-        eventSource = new EventSource(`${apiBase}${streamUrl}`)
+        eventSource = new EventSource(`${apiBase}/pollens/streams/${streamId}`)
         eventSource.addEventListener('update', (event) => {
           try {
             const data = JSON.parse((event as MessageEvent<string>).data) as {
@@ -433,9 +433,7 @@ function Home() {
                         {shuttle.route_long_name}
                       </span>
                       <span className="overflow-hidden text-[11px] text-ellipsis whitespace-nowrap text-[#687780]">
-                        {rowNext
-                          ? `Next: ${rowNext.stop?.stop_name ?? rowNext.stop?.stop_desc ?? `Stop ${rowNext.stop_sequence}`}`
-                          : 'No scheduled stops'}
+                        {shuttle.trip.stops.at(-1)?.stop?.stop_desc ?? ''}
                       </span>
                     </span>
                   </div>
@@ -652,19 +650,6 @@ function Home() {
             )}
           </aside>
         </div>
-
-        <section className="mt-[18px] flex flex-wrap items-start gap-3 rounded-md border border-[#dce7e2] bg-[#eaf1ed] p-3.5 sm:items-center">
-          <span className="material-symbols-outlined grid size-[34px] shrink-0 place-items-center rounded-md bg-[#d9eaf0] text-[#126b91]">info</span>
-          <div className="min-w-0 flex-1 basis-[calc(100%-50px)] sm:basis-0">
-            <strong className="text-xs">Scheduled bay maintenance tonight</strong>
-            <p className="mt-1 mb-0 text-[11px] leading-relaxed text-[#687780]">
-              Starting at 22:00, shuttles departing from Bay 01 and 02 will reroute through North Plaza Gate 8.
-            </p>
-          </div>
-          <a className="ml-[47px] whitespace-nowrap rounded bg-white px-3 py-2 text-[10px] font-semibold text-[#192b35] no-underline sm:ml-0" href="#maintenance">
-            Learn more
-          </a>
-        </section>
       </main>
 
       <footer className="flex min-h-[60px] flex-wrap items-center gap-x-3 gap-y-2 border-t border-[#dce4e5] bg-white px-4 py-3 sm:px-6 xl:px-[max(24px,calc((100vw-1440px)/2))]">

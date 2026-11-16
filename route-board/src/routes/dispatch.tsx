@@ -197,8 +197,18 @@ function DispatchPage() {
   }
 
   async function assignVehicle(trip: Trip, vehicle: string) {
-    if (!dispatcher || !await persistTripAction(trip, 'vehicle', { vehicle })) return
-    logEvent(`${trip.id} assigned to ${vehicle}.`, 'Vehicle assignment')
+    if (!dispatcher) return
+    try {
+      await apiRequest(`/api/v1/dispatch/trips/${encodeURIComponent(trip.id)}/events`, {
+        method: 'POST',
+        body: JSON.stringify({ event_type: 'vehicle', vehicle_label: vehicle }),
+      })
+      setTrips((current) => current.map((item) => item.id === trip.id ? { ...item, vehicle } : item))
+      setErrorMessage('')
+      logEvent(`${trip.id} assigned to ${vehicle}.`, 'Vehicle assignment')
+    } catch (error) {
+      handleApiError(error)
+    }
   }
 
   async function recordDeparture(trip: Trip) {

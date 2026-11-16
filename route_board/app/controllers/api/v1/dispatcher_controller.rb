@@ -36,13 +36,20 @@ module Api
 
         event = nil
         ActiveRecord::Base.transaction do
+          if event_type == "vehicle"
+            route_id = RouteStop.where(trip_id: trip_id).pick(:route_id)
+            vehicle = Vehicle.find_or_initialize_by(route_id: route_id)
+            vehicle.label = params.require(:vehicle_label)
+            vehicle.save!
+          end
+
           event = TripEvent.create!(
             gtfs_trip_id:  trip_id,
             event_type:    event_type,
             stop_id:       params[:stop_id],
             occurred_at:   Time.current,
             delay_minutes: params[:delay_minutes].to_i,
-            payload:       params.permit(:stop_id, :delay_minutes, :status, :vehicle_id).to_h,
+            payload:       params.permit(:stop_id, :delay_minutes, :status, :vehicle_id, :vehicle_label).to_h,
             actor:         actor
           )
 

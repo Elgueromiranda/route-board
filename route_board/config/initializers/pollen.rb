@@ -8,6 +8,7 @@ Pollen.common.configure do |config|
 end
 
 Pollen.server.configure do |config|
+  config.route_regexp %r{^/pollens/streams/(#{Pollen::ServerConfiguration::UUID_REGEXP})}
   config.authenticate do |request, _env|
     stream_id = request.path.match(Pollen::ServerConfiguration::UUID_REGEXP)&.to_s
     Pollen::Stream.find_by(id: stream_id)&.owner if stream_id

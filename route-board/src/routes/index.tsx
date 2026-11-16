@@ -48,6 +48,8 @@ type RouteEstimate = {
   stale?: boolean
 }
 
+type TripEstimatesByStop = Record<string, Record<number, string>>
+
 /* ---------- time helpers ---------- */
 
 function parseScheduleTime(value: string) {
@@ -69,11 +71,14 @@ function scheduleSeconds(value: string) {
 
 function scheduleDate(value: string, reference: Date) {
   const parsed = parseScheduleTime(value)
-  if (!parsed) return null
-  const d = new Date(reference)
-  d.setHours(0, 0, 0, 0)
-  d.setHours(parsed.hours, parsed.minutes, parsed.seconds, 0)
-  return d
+  if (parsed) {
+    const d = new Date(reference)
+    d.setHours(0, 0, 0, 0)
+    d.setHours(parsed.hours, parsed.minutes, parsed.seconds, 0)
+    return d
+  }
+  const timestamp = Date.parse(value)
+  return Number.isFinite(timestamp) ? new Date(timestamp) : null
 }
 
 function secondsToClock(totalSeconds: number) {
@@ -139,10 +144,53 @@ function etaFromTime(time: string | undefined, clock: Date) {
   if (!time) return { label: '—', minutes: Number.POSITIVE_INFINITY }
   const scheduled = scheduleDate(time, clock)
   if (!scheduled) return { label: '—', minutes: Number.POSITIVE_INFINITY }
-  const minutes = Math.ceil((scheduled.getTime() - clock.getTime()) / 60_000)
-  if (minutes < 0) return { label: 'Departed', minutes }
-  if (minutes === 0) return { label: 'Due now', minutes: 0 }
+  const remainingMs = scheduled.getTime() - clock.getTime()
+  const minutes = Math.ceil(remainingMs / 60_000)
+  if (remainingMs <= 0) return { label: 'Due', minutes: 0 }
   return { label: `${minutes} min`, minutes }
+}
+
+function normalizeTripEstimates(payload: unknown): TripEstimatesByStop {
+  const result: TripEstimatesByStop = {}
+  const add = (tripId: string, stopSequence: unknown, estimatedTime: unknown) => {
+    const sequence = Number(stopSequence)
+    if (Number.isFinite(sequence) && typeof estimatedTime === 'string') {
+      result[tripId] ??= {}
+      result[tripId][sequence] = estimatedTime
+    }
+  }
+  const visit = (value: unknown, tripId?: string) => {
+    if (Array.isArray(value)) {
+      value.forEach((entry) => visit(entry, tripId))
+      return
+    }
+    if (!value || typeof value !== 'object') return
+
+    const record = value as Record<string, unknown>
+    if (record.stop_sequence != null && typeof record.estimated_time === 'string') {
+      const estimateTripId = typeof record.trip_id === 'string' ? record.trip_id : tripId
+      if (estimateTripId) add(estimateTripId, record.stop_sequence, record.estimated_time)
+      return
+    }
+    for (const [key, nested] of Object.entries(record)) {
+      if (tripId) {
+        if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+          const stopRecord = nested as Record<string, unknown>
+          add(tripId, key, stopRecord.estimated_time)
+        } else {
+          add(tripId, key, nested)
+        }
+      } else {
+        visit(nested, key)
+      }
+    }
+  }
+
+  const root = payload && typeof payload === 'object' && !Array.isArray(payload)
+    ? (payload as Record<string, unknown>).estimates ?? payload
+    : payload
+  visit(root)
+  return result
 }
 
 /* ---------- route ---------- */
@@ -190,6 +238,21 @@ function Home() {
     (safeCurrentPage - 1) * ITEMS_PER_PAGE,
     safeCurrentPage * ITEMS_PER_PAGE,
   )
+  const paginatedTripIds = paginatedShuttles
+    .map((shuttle) => shuttle.trip.trip_id)
+    .filter((tripId): tripId is string => !!tripId)
+
+  const { data: estimatesByTrip = {} } = useQuery<TripEstimatesByStop>({
+    queryKey: ['trip-estimates', paginatedTripIds],
+    enabled: paginatedTripIds.length > 0,
+    queryFn: async () => {
+      const params = new URLSearchParams()
+      paginatedTripIds.forEach((tripId) => params.append('trip_ids[]', tripId))
+      const response = await fetch(`${apiBase}/api/v1/trips/estimates?${params.toString()}`)
+      if (!response.ok) throw new Error('Failed to fetch trip estimates')
+      return normalizeTripEstimates(await response.json())
+    },
+  })
 
   useEffect(() => {
     setCurrentPage(1)
@@ -234,23 +297,21 @@ function Home() {
   const nextStop = useMemo(() => {
     if (!selectedShuttle) return undefined
     const stops = getOrderedStops(selectedShuttle)
-    const nowSec = clock.getHours() * 3600 + clock.getMinutes() * 60 + clock.getSeconds()
     return stops.find((s) => {
-      const est = estimatedBySeq[s.stop_sequence]
+      const est = estimatesByTrip[selectedShuttle.trip.trip_id ?? '']?.[s.stop_sequence]
+        ?? estimatedBySeq[s.stop_sequence]
       const ref = est ?? s.departure_time
-      return scheduleSeconds(ref) >= nowSec
+      const target = scheduleDate(ref, clock)
+      return target !== null && target >= clock
     })
-  }, [selectedShuttle, clock, estimatedBySeq])
+  }, [selectedShuttle, clock, estimatedBySeq, estimatesByTrip])
 
   /* ------- clock ------- */
   useEffect(() => {
     if (clockInitialized.current || shuttles.length === 0) return
 
-    const earliestDeparture = shuttles
-      .flatMap((shuttle) => shuttle.trip.stops.map((stop) => stop.departure_time))
-      .filter((departure) => Number.isFinite(scheduleSeconds(departure)))
-      .sort((a, b) => scheduleSeconds(a) - scheduleSeconds(b))[0]
-    const parsed = earliestDeparture ? parseScheduleTime(earliestDeparture) : null
+    const firstDeparture = shuttles[0] ? getOrderedStops(shuttles[0])[0]?.departure_time : undefined
+    const parsed = firstDeparture ? parseScheduleTime(firstDeparture) : null
     if (!parsed) return
 
     const mockNow = new Date()
@@ -303,7 +364,8 @@ function Home() {
 
   /* ------- helper for a stop: scheduled vs estimated ------- */
   function stopTimes(stop: Stop) {
-    const estimated = estimatedBySeq[stop.stop_sequence]
+    const estimated = estimatesByTrip[selectedShuttle?.trip.trip_id ?? '']?.[stop.stop_sequence]
+      ?? estimatedBySeq[stop.stop_sequence]
     return {
       scheduled: stop.departure_time,
       estimated: estimated ?? null,
@@ -401,14 +463,20 @@ function Home() {
 
             {paginatedShuttles.map((shuttle) => {
               const stops = getOrderedStops(shuttle)
-              const nowSec = clock.getHours() * 3600 + clock.getMinutes() * 60 + clock.getSeconds()
+              const tripEstimates = estimatesByTrip[shuttle.trip.trip_id ?? ''] ?? {}
               const rowNext = stops.find((s) => {
-                const est = estimatedBySeq[s.stop_sequence] // only for selected; otherwise fall back
-                return scheduleSeconds(est ?? s.departure_time) >= nowSec
+                const est = tripEstimates[s.stop_sequence]
+                  ?? (getShuttleKey(shuttle) === getShuttleKey(selectedShuttle ?? shuttle)
+                    ? estimatedBySeq[s.stop_sequence]
+                    : undefined)
+                const target = scheduleDate(est ?? s.departure_time, clock)
+                return target !== null && target >= clock
               })
               const selected = selectedShuttle != null && getShuttleKey(shuttle) === selectedShuttleKey
               const rowEffective = rowNext
-                ? estimatedBySeq[rowNext.stop_sequence] ?? rowNext.departure_time
+                ? tripEstimates[rowNext.stop_sequence]
+                  ?? (selected ? estimatedBySeq[rowNext.stop_sequence] : undefined)
+                  ?? rowNext.departure_time
                 : undefined
               const eta = etaFromTime(rowEffective, clock)
               const isDelayed = !!shuttle.delayed

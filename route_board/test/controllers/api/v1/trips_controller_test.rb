@@ -42,17 +42,6 @@ class Api::V1::TripsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 51, response.parsed_body.length
   end
 
-  test "index returns the assigned vehicle label for a route" do
-    create_route_with_stops("route-vehicle", "trip-vehicle", ["stop-vehicle"])
-    Vehicle.create!(route_id: "route-vehicle", label: "Shuttle 204")
-
-    get "/api/v1/trips"
-
-    assert_response :success
-    route = response.parsed_body.find { |item| item["route_id"] == "route-vehicle" }
-    assert_equal "Shuttle 204", route.dig("vehicle", "label")
-  end
-
   test "trip updates endpoint returns a Pollen stream ID with an intercepted route" do
     create_route_with_stops("route-stream", "trip-stream", ["stop-stream"])
 

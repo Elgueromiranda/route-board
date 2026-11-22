@@ -242,7 +242,7 @@ function Home() {
     .map((shuttle) => shuttle.trip.trip_id)
     .filter((tripId): tripId is string => !!tripId)
 
-  const { data: estimatesByTrip = {} } = useQuery<TripEstimatesByStop>({
+  const { data: estimatesByTrip = {}, isSuccess: estimatesLoaded } = useQuery<TripEstimatesByStop>({
     queryKey: ['trip-estimates', paginatedTripIds],
     enabled: paginatedTripIds.length > 0,
     queryFn: async () => {
@@ -524,7 +524,7 @@ function Home() {
 
                   <div className={`flex flex-col items-end gap-[5px] ${isDelayed ? 'text-[#a75a16]' : 'text-[#087a59]'}`}>
                     <strong className="font-['Space_Grotesk',sans-serif] text-[20px] leading-[.9] font-semibold">
-                      {eta.label}
+                      {paginatedTripIds.length > 0 && !estimatesLoaded ? '—' : eta.label}
                     </strong>
                     <span className="inline-flex items-center gap-[5px] whitespace-nowrap text-[9px] font-bold uppercase">
                       {!isDelayed && <i className="size-1.5 rounded-full bg-current" />}

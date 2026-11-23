@@ -174,19 +174,9 @@ test:
 production:
   primary: &primary_production
     <<: *default
-    database: route_board_production
-    username: route_board
-    password: <%= ENV["ROUTE_BOARD_DATABASE_PASSWORD"] %>
-  cache:
-    <<: *primary_production
-    database: route_board_production_cache
-    migrations_paths: db/cache_migrate
-  queue:
-    <<: *primary_production
-    database: route_board_production_queue
-    migrations_paths: db/queue_migrate
-  cable:
-    <<: *primary_production
-    database: route_board_production_cable
-    migrations_paths: db/cable_migrate
-
+    host: <%= ENV["DB_HOST"] %>
+    database: <%= ENV["DB_DATABASE"] %>
+    username: <%= ENV["DB_USER"] %>
+    password: <%= ENV["DB_PASSWORD"] %>
+    # For Azure PostgreSQL, SSL is required
+    sslmode: require

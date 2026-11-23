@@ -178,5 +178,8 @@ production:
     database: <%= ENV["DB_DATABASE"] %>
     username: <%= ENV["DB_USER"] %>
     password: <%= ENV["DB_PASSWORD"] %>
-    # For Azure PostgreSQL, SSL is required
     sslmode: require
+  cable:
+    <<: *primary_production
+    database: route_board_production_cable
+    migrations_paths: db/cable_migrate

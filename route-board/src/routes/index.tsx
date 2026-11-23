@@ -2,8 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { LiveClock } from '../components/LiveClock'
-
-const apiBase = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000').replace(/\/$/, '')
+import { apiBase } from '../lib/api'
 
 type Stop = {
   stop_sequence: number
@@ -213,7 +212,7 @@ function Home() {
   const { data: shuttles = [], isLoading: tripsLoading } = useQuery<Shuttle[]>({
     queryKey: ['trips'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:3000/api/v1/trips')
+      const res = await fetch(`${apiBase}/api/v1/trips`)
       if (!res.ok) throw new Error('Failed to fetch trips')
       return res.json()
     },
@@ -271,7 +270,7 @@ function Home() {
     queryKey: ['estimate', selectedRouteId],
     enabled: !!selectedRouteId && hasManuallySelected,
     queryFn: async () => {
-      const res = await fetch(`http://localhost:3000/api/v1/routes/${selectedRouteId}/estimate`)
+      const res = await fetch(`${apiBase}/api/v1/routes/${selectedRouteId}/estimate`)
       if (!res.ok) throw new Error('Failed to fetch estimate')
       return res.json()
     },

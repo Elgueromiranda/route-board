@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { apiBase } from '../lib/api'
 
 export const Route = createFileRoute('/dispatch')({ component: DispatchPage })
 
@@ -46,8 +47,6 @@ class ApiError extends Error {
     super(message)
   }
 }
-
-const apiBase = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000').replace(/\/$/, '')
 
 async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(`${apiBase}${path}`, {

@@ -37,3 +37,4 @@ vendor/gtfs/stops.txt
 vendor/gtfs/routes.txt
 vendor/gtfs/trips.txt
 vendor/gtfs/stop_times.txt
+vendor/

@@ -55,6 +55,48 @@ module Api
 
         render json: route_payloads
       end
+
+      def estimates
+        trip_ids = Array(params[:trip_ids]).map(&:to_s).reject(&:blank?).uniq
+        return render json: { error: "trip_ids cannot exceed 20" }, status: :unprocessable_entity if trip_ids.length > 20
+
+        stops_by_trip = RouteStop.includes(:stop)
+                                 .where(trip_id: trip_ids)
+                                 .order(:trip_id, :stop_sequence)
+                                 .to_a
+                                 .group_by(&:trip_id)
+        delays_by_trip = TripEvent.where(gtfs_trip_id: trip_ids, event_type: "delayed")
+                                  .order(:sequence)
+                                  .to_a
+                                  .group_by(&:gtfs_trip_id)
+
+        payload = trip_ids.to_h do |trip_id|
+          stops = stops_by_trip.fetch(trip_id, [])
+          legs = GeoapifyRouteEstimator.cached_legs_for(stops)
+          delay_minutes = delays_by_trip.fetch(trip_id, []).last&.delay_minutes || 0
+          estimates = ArrivalEstimate.for(
+            trip_id,
+            delay_minutes: delay_minutes,
+            stops: stops,
+            events: [],
+            legs: legs
+          )
+
+          stop_times = estimates.to_h do |estimate|
+            [estimate.stop_sequence.to_s, format_estimated_time(estimate.estimated)]
+          end
+          [trip_id, { stops: stop_times }]
+        end
+
+        render json: payload
+      end
+
+      private
+
+      def format_estimated_time(value)
+        hours, minutes = value.split(":").first(2).map(&:to_i)
+        Time.utc(2000, 1, 1, hours, minutes).strftime("%-I:%M %p")
+      end
     end
   end
 end

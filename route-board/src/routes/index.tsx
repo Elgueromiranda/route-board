@@ -37,16 +37,6 @@ type Shuttle = {
   status?: string
 }
 
-type RouteEstimate = {
-  route_id: string
-  available: boolean
-  duration_seconds?: number
-  distance_meters?: number
-  fetched_at?: string
-  cached?: boolean
-  stale?: boolean
-}
-
 type TripEstimatesByStop = Record<string, Record<number, string>>
 
 /* ---------- time helpers ---------- */
@@ -80,14 +70,6 @@ function scheduleDate(value: string, reference: Date) {
   return Number.isFinite(timestamp) ? new Date(timestamp) : null
 }
 
-function secondsToClock(totalSeconds: number) {
-  const s = ((totalSeconds % 86400) + 86400) % 86400
-  const h = Math.floor(s / 3600)
-  const m = Math.floor((s % 3600) / 60)
-  const sec = Math.floor(s % 60)
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
-}
-
 function hhmm(value?: string | null) {
   if (!value) return '—'
   return value.slice(0, 5)
@@ -102,38 +84,6 @@ function getShuttleKey(shuttle: Shuttle) {
     shuttle.route_id ??
     shuttle.code ??
     `${shuttle.route_short_name}-${shuttle.route_long_name}`
-  )
-}
-
-/* ---------- estimate distribution ---------- */
-
-/**
- * Given the ordered stops and the Geoapify total duration, compute an
- * estimated `departure_time` for each stop by scaling the schedule offsets.
- */
-function distributeEstimate(stops: Stop[], totalDurationSeconds: number): Record<number, string> {
-  if (stops.length === 0 || !Number.isFinite(totalDurationSeconds) || totalDurationSeconds <= 0) {
-    return {}
-  }
-
-  const firstSec = scheduleSeconds(stops[0].departure_time)
-  const lastSec = scheduleSeconds(stops[stops.length - 1].departure_time)
-  const scheduleSpan = lastSec - firstSec
-
-  // If schedule has no span (single stop / all same time), just use first time.
-  if (!Number.isFinite(scheduleSpan) || scheduleSpan <= 0) {
-    const only = stops[0].departure_time
-    return Object.fromEntries(stops.map((s) => [s.stop_sequence, only]))
-  }
-
-  const scale = totalDurationSeconds / scheduleSpan
-
-  return Object.fromEntries(
-    stops.map((s) => {
-      const offset = scheduleSeconds(s.departure_time) - firstSec
-      const estimated = firstSec + offset * scale
-      return [s.stop_sequence, secondsToClock(estimated)]
-    })
   )
 }
 
@@ -166,6 +116,12 @@ function normalizeTripEstimates(payload: unknown): TripEstimatesByStop {
     if (!value || typeof value !== 'object') return
 
     const record = value as Record<string, unknown>
+    if (tripId && record.stops && typeof record.stops === 'object' && !Array.isArray(record.stops)) {
+      for (const [sequence, estimatedTime] of Object.entries(record.stops)) {
+        add(tripId, sequence, estimatedTime)
+      }
+      return
+    }
     if (record.stop_sequence != null && typeof record.estimated_time === 'string') {
       const estimateTripId = typeof record.trip_id === 'string' ? record.trip_id : tripId
       if (estimateTripId) add(estimateTripId, record.stop_sequence, record.estimated_time)
@@ -204,12 +160,11 @@ function Home() {
   const [currentPage, setCurrentPage] = useState(1)
   const [clock, setClock] = useState(() => new Date())
   const [selectedShuttleKey, setSelectedShuttleKey] = useState<string | null>(null)
-  const [hasManuallySelected, setHasManuallySelected] = useState(false)
   const clockInitialized = useRef(false)
   const queryClient = useQueryClient()
 
   /* ------- trips list ------- */
-  const { data: shuttles = [], isLoading: tripsLoading } = useQuery<Shuttle[]>({
+  const { data: shuttles = [] } = useQuery<Shuttle[]>({
     queryKey: ['trips'],
     queryFn: async () => {
       const res = await fetch(`${apiBase}/api/v1/trips`)
@@ -263,30 +218,11 @@ function Home() {
 
   const manuallySelectedShuttle = filteredShuttles.find((s) => getShuttleKey(s) === selectedShuttleKey)
   const selectedShuttle = manuallySelectedShuttle ?? filteredShuttles[0]
-  const selectedRouteId = manuallySelectedShuttle?.route_id
-
-  /* ------- per-route estimate (Geoapify) ------- */
-  const { data: estimate, isError: estimateError, isFetching: estimateLoading } = useQuery<RouteEstimate>({
-    queryKey: ['estimate', selectedRouteId],
-    enabled: !!selectedRouteId && hasManuallySelected,
-    queryFn: async () => {
-      const res = await fetch(`${apiBase}/api/v1/routes/${selectedRouteId}/estimate`)
-      if (!res.ok) throw new Error('Failed to fetch estimate')
-      return res.json()
-    },
-    staleTime: 5 * 60_000,
-  })
-
-  const estimateAvailable =
-    !!estimate && estimate.available && !estimateError && (estimate.duration_seconds ?? 0) > 0
 
   const orderedStops = selectedShuttle ? getOrderedStops(selectedShuttle) : []
-  const estimatedBySeq = useMemo(() => {
-    if (!estimateAvailable || !estimate?.duration_seconds) return {}
-    return distributeEstimate(orderedStops, estimate.duration_seconds)
-  }, [estimateAvailable, estimate?.duration_seconds, orderedStops])
+  const selectedTripEstimates = estimatesByTrip[selectedShuttle?.trip.trip_id ?? ''] ?? {}
   const latestPassedIndex = orderedStops.reduce((latestIndex, stop, index) => {
-    const effectiveTime = estimatedBySeq[stop.stop_sequence] ?? stop.departure_time
+    const effectiveTime = selectedTripEstimates[stop.stop_sequence] ?? stop.departure_time
     const stopDate = scheduleDate(effectiveTime, clock)
     return stopDate && stopDate < clock ? index : latestIndex
   }, -1)
@@ -298,12 +234,11 @@ function Home() {
     const stops = getOrderedStops(selectedShuttle)
     return stops.find((s) => {
       const est = estimatesByTrip[selectedShuttle.trip.trip_id ?? '']?.[s.stop_sequence]
-        ?? estimatedBySeq[s.stop_sequence]
       const ref = est ?? s.departure_time
       const target = scheduleDate(ref, clock)
       return target !== null && target >= clock
     })
-  }, [selectedShuttle, clock, estimatedBySeq, estimatesByTrip])
+  }, [selectedShuttle, clock, estimatesByTrip])
 
   /* ------- clock ------- */
   useEffect(() => {
@@ -341,10 +276,11 @@ function Home() {
           try {
             const data = JSON.parse((event as MessageEvent<string>).data) as {
               trip_id?: string
-              route_id?: string
             }
-            if (data.trip_id) queryClient.invalidateQueries({ queryKey: ['trips'] })
-            if (data.route_id) queryClient.invalidateQueries({ queryKey: ['estimate', data.route_id] })
+            if (data.trip_id) {
+              queryClient.invalidateQueries({ queryKey: ['trips'] })
+              queryClient.invalidateQueries({ queryKey: ['trip-estimates'] })
+            }
           } catch {
             /* ignore malformed */
           }
@@ -363,8 +299,7 @@ function Home() {
 
   /* ------- helper for a stop: scheduled vs estimated ------- */
   function stopTimes(stop: Stop) {
-    const estimated = estimatesByTrip[selectedShuttle?.trip.trip_id ?? '']?.[stop.stop_sequence]
-      ?? estimatedBySeq[stop.stop_sequence]
+    const estimated = selectedTripEstimates[stop.stop_sequence]
     return {
       scheduled: stop.departure_time,
       estimated: estimated ?? null,
@@ -465,16 +400,12 @@ function Home() {
               const tripEstimates = estimatesByTrip[shuttle.trip.trip_id ?? ''] ?? {}
               const rowNext = stops.find((s) => {
                 const est = tripEstimates[s.stop_sequence]
-                  ?? (getShuttleKey(shuttle) === getShuttleKey(selectedShuttle ?? shuttle)
-                    ? estimatedBySeq[s.stop_sequence]
-                    : undefined)
                 const target = scheduleDate(est ?? s.departure_time, clock)
                 return target !== null && target >= clock
               })
               const selected = selectedShuttle != null && getShuttleKey(shuttle) === selectedShuttleKey
               const rowEffective = rowNext
                 ? tripEstimates[rowNext.stop_sequence]
-                  ?? (selected ? estimatedBySeq[rowNext.stop_sequence] : undefined)
                   ?? rowNext.departure_time
                 : undefined
               const eta = etaFromTime(rowEffective, clock)
@@ -538,7 +469,6 @@ function Home() {
                     type="button"
                     onClick={() => {
                       setSelectedShuttleKey(getShuttleKey(shuttle))
-                      setHasManuallySelected(true)
                     }}
                   >
                     {selected ? 'Selected' : 'View stops'}
@@ -613,12 +543,6 @@ function Home() {
               </div>
             </div>
 
-            {hasManuallySelected && selectedRouteId && !estimateAvailable && !estimateLoading && (
-              <p className="m-0 rounded bg-[#fff6ea] px-2 py-1.5 text-[9px] text-[#a75a16]">
-                Road estimate unavailable — showing scheduled times.
-              </p>
-            )}
-
             <div>
               <h3 className="mb-[15px] text-[9px] font-bold uppercase tracking-[.08em] text-[#687780]">Sequential stop milestones</h3>
               <div className="relative max-h-[224px] overflow-y-auto overscroll-contain pr-2 pl-[21px] [scrollbar-gutter:stable] before:absolute before:top-[9px] before:bottom-[10px] before:left-[6px] before:w-px before:bg-[#cbd7d6]">
@@ -629,7 +553,7 @@ function Home() {
                     const scheduledDate = scheduleDate(effective, clock)
                     const passed = scheduledDate !== null && scheduledDate < clock
                     const nextIndex = orderedStops.findIndex((entry) => {
-                      const ref = estimatedBySeq[entry.stop_sequence] ?? entry.departure_time
+                      const ref = selectedTripEstimates[entry.stop_sequence] ?? entry.departure_time
                       return scheduleSeconds(ref) >= clock.getHours() * 3600 + clock.getMinutes() * 60 + clock.getSeconds()
                     })
                     const index = orderedStops.findIndex((e) => e.stop_sequence === stop.stop_sequence)

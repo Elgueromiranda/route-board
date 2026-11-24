@@ -71,8 +71,14 @@ module Api
 
       def trip_json(trip_id)
         state    = TripEvent.state_for(trip_id)
-        estimate = ArrivalEstimate.for(trip_id, delay_minutes: state[:delay_minutes])
         stops    = RouteStop.where(trip_id: trip_id).order(:stop_sequence).includes(:stop)
+        legs     = GeoapifyRouteEstimator.cached_legs_for(stops)
+        estimate = ArrivalEstimate.for(
+          trip_id,
+          delay_minutes: state[:delay_minutes],
+          stops: stops,
+          legs: legs
+        )
         route    = Route.find_by(route_id: stops.first&.route_id)
         vehicle  = Vehicle.find_by(route_id: route&.route_id)
 

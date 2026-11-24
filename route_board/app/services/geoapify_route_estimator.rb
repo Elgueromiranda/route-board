@@ -1,25 +1,26 @@
 # app/services/geoapify_route_estimator.rb
 require "net/http"
 require "json"
+require "digest"
 
 class GeoapifyRouteEstimator
   BASE = "https://api.geoapify.com/v1/routing"
   MODE = "bus"
 
-  def initialize(route)
-    @route = route
+  def initialize(stops)
+    @stops = Array(stops)
   end
 
   def call
-    waypoints = waypoint_string
-    return nil if waypoints.blank?
+    coordinates = self.class.coordinates_for(@stops)
+    return nil if coordinates.length < 2 || coordinates.any?(&:blank?)
 
     api_key = Rails.application.credentials.dig(:geoapify, :api_key) ||
               ENV["GEOAPIFY_API_KEY"]
     return nil if api_key.blank?
 
     uri = URI(BASE)
-    uri.query = URI.encode_www_form(waypoints: waypoints, mode: MODE, apiKey: api_key)
+    uri.query = URI.encode_www_form(waypoints: coordinates.join("|"), mode: MODE, apiKey: api_key)
 
     res = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 5, read_timeout: 10) do |http|
       http.get(uri.request_uri)
@@ -28,34 +29,35 @@ class GeoapifyRouteEstimator
     return nil unless res.is_a?(Net::HTTPSuccess)
 
     json  = JSON.parse(res.body)
-    props = json.dig("features", 0, "properties")
-    return nil unless props
+    legs = json.dig("features", 0, "properties", "legs")
+    return nil unless legs.is_a?(Array) && legs.length == coordinates.length - 1
 
-    {
-      distance_meters:  props["distance"],
-      duration_seconds: props["time"],
-      fetched_at:       Time.current
-    }
+    legs.map { |leg| Float(leg.fetch("time")) }
   rescue StandardError => e
-    Rails.logger.warn("[Geoapify] route #{@route&.route_id}: #{e.class} #{e.message}")
+    Rails.logger.warn("[Geoapify] trip leg estimate failed: #{e.class} #{e.message}")
     nil
   end
 
-  private
+  def self.coordinates_for(stops)
+    Array(stops).map do |item|
+      stop = item.respond_to?(:stop) ? item.stop : item
+      next unless stop&.stop_lat.present? && stop&.stop_lon.present?
 
-  def ordered_stops
-    @ordered_stops ||= begin
-      trip_id = @route.route_stops.where.not(trip_id: nil).pick(:trip_id)
-      scope   = trip_id ? @route.route_stops.where(trip_id: trip_id) : @route.route_stops
-      scope.order(:stop_sequence).to_a
+      "#{stop.stop_lat},#{stop.stop_lon}"
     end
   end
 
-  def waypoint_string
-    ordered_stops
-      .filter_map(&:stop)
-      .select { |s| s.stop_lat.present? && s.stop_lon.present? }
-      .map { |s| "#{s.stop_lat},#{s.stop_lon}" }
-      .join("|")
+  def self.cache_key_for(stops)
+    coordinates = coordinates_for(stops)
+    return if coordinates.length < 2 || coordinates.any?(&:blank?)
+
+    "geoapify:trip-legs:v1:#{Digest::SHA256.hexdigest(coordinates.join("|"))}"
+  end
+
+  def self.cached_legs_for(stops)
+    cache_key = cache_key_for(stops)
+    return unless cache_key
+
+    Rails.cache.fetch(cache_key, expires_in: 5.minutes) { new(stops).call }
   end
 end

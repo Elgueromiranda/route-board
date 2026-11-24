@@ -13,9 +13,6 @@ Rails.application.routes.draw do
       get "trips/estimates", to: "trips#estimates"
       get "trips/updates", to: "trip_updates#show"
 
-      # per-route Geoapify estimate
-      get "routes/:route_id/estimate", to: "route_estimates#show"
-
       # dispatcher
       get  "dispatch/me",                    to: "dispatcher#me"
       get  "dispatch/trips/:trip_id",        to: "dispatcher#show"

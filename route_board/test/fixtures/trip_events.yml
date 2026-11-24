@@ -1,17 +1,17 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  trip: one
-  event_type: MyString
-  stop: one
-  observed_time: 2026-10-25 09:55:28
-  delay_delta_minutes: 1
-  notes: MyText
+  gtfs_trip_id: trip-one
+  event_type: delayed
+  occurred_at: 2026-10-25 09:55:28
+  delay_minutes: 1
+  sequence: 1
+  actor: dispatcher@example.test
 
 two:
-  trip: two
-  event_type: MyString
-  stop: two
-  observed_time: 2026-10-25 09:55:28
-  delay_delta_minutes: 1
-  notes: MyText
+  gtfs_trip_id: trip-two
+  event_type: departure
+  occurred_at: 2026-10-25 09:56:28
+  delay_minutes: 0
+  sequence: 2
+  actor: dispatcher@example.test

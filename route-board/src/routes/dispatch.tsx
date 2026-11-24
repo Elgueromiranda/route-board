@@ -31,15 +31,27 @@ type Dispatcher = {
   image?: string
 }
 
-type ApiTrip = {
-  id: string
-  route: string
-  destination: string
-  vehicle: string
-  stops: string[]
-  nextStopIndex: number
-  departed: boolean
-  status: TripStatus
+type ApiRouteTrip = {
+  route_long_name: string
+  status: string
+  vehicle?: { id: number | string; label: string | null } | null
+  trip: {
+    trip_id?: string
+    stops: Array<{
+      stop_sequence: number
+      stop?: { stop_name?: string | null; stop_desc?: string | null } | null
+    }>
+  }
+}
+
+type ApiDispatchTrip = {
+  trip_id: string
+  route?: { long_name?: string | null } | null
+  vehicle?: { id: number | string; label: string | null } | null
+  status: string
+  next_stop_sequence: number
+  stops: Array<{ stop?: { stop_name?: string | null; stop_desc?: string | null } | null }>
+  events: Array<{ event_type: string }>
 }
 
 class ApiError extends Error {
@@ -59,8 +71,48 @@ async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   return payload as T
 }
 
-function tripFromApi(trip: ApiTrip): Trip {
-  return { ...trip }
+function normalizedStatus(status: string): TripStatus {
+  const statuses: Record<string, TripStatus> = {
+    scheduled: 'Scheduled',
+    in_progress: 'In progress',
+    delayed: 'Delayed',
+    canceled: 'Canceled',
+    completed: 'Completed',
+  }
+  return statuses[status.toLowerCase()] ?? 'Scheduled'
+}
+
+function tripFromIndex(route: ApiRouteTrip): Trip | null {
+  const id = route.trip.trip_id
+  if (!id) return null
+  const stops = [...route.trip.stops]
+    .sort((left, right) => left.stop_sequence - right.stop_sequence)
+    .filter((stop, index, list) => index === 0 || stop.stop_sequence !== list[index - 1].stop_sequence)
+
+  return {
+    id,
+    route: route.route_long_name,
+    destination: stops.at(-1)?.stop?.stop_desc ?? stops.at(-1)?.stop?.stop_name ?? '',
+    vehicle: route.vehicle?.label ?? (route.vehicle?.id != null ? `Vehicle #${route.vehicle.id}` : ''),
+    stops: stops.map((stop) => stop.stop?.stop_name ?? stop.stop?.stop_desc ?? `Stop ${stop.stop_sequence}`),
+    nextStopIndex: 0,
+    departed: route.status === 'in_progress',
+    status: normalizedStatus(route.status),
+  }
+}
+
+function tripFromDispatch(trip: ApiDispatchTrip): Trip {
+  const stops = trip.stops.map((stop) => stop.stop?.stop_name ?? stop.stop?.stop_desc ?? 'Unknown stop')
+  return {
+    id: trip.trip_id,
+    route: trip.route?.long_name ?? 'Unknown route',
+    destination: stops.at(-1) ?? '',
+    vehicle: trip.vehicle?.label ?? (trip.vehicle?.id != null ? `Vehicle #${trip.vehicle.id}` : ''),
+    stops,
+    nextStopIndex: trip.next_stop_sequence,
+    departed: trip.events.some((event) => event.event_type === 'departure'),
+    status: normalizedStatus(trip.status),
+  }
 }
 
 const vehicles = ['Shuttle 204', 'Shuttle 318', 'Shuttle 409', 'Shuttle 512']
@@ -90,12 +142,12 @@ function DispatchPage() {
     async function loadAuthorizedWorkspace() {
       setAuthLoading(true)
       try {
-        const identity = await apiRequest<Dispatcher>('/api/v1/dispatcher/me')
+        const identity = await apiRequest<Dispatcher>('/api/v1/dispatch/me')
         if (!active) return
         setDispatcher(identity)
-        const response = await apiRequest<ApiTrip[]>('/api/v1/dispatcher/trips')
+        const response = await apiRequest<ApiRouteTrip[]>('/api/v1/trips')
         if (active) {
-          setTrips(response.map(tripFromApi))
+          setTrips(response.map(tripFromIndex).filter((trip): trip is Trip => trip !== null))
           setErrorMessage('')
         }
       } catch (error) {
@@ -151,11 +203,17 @@ function DispatchPage() {
 
   async function persistTripAction(trip: Trip, actionName: string, extra: Record<string, string> = {}) {
     try {
-      const response = await apiRequest<{ trip: ApiTrip }>(`/api/v1/dispatcher/trips/${encodeURIComponent(trip.id)}/stops`, {
+      const eventType = actionName === 'status'
+        ? extra.status?.toLowerCase() === 'delayed' ? 'delayed' : extra.status?.toLowerCase() === 'canceled' ? 'canceled' : null
+        : actionName
+      if (!eventType) throw new Error('This status change is not supported by the dispatch API.')
+
+      await apiRequest(`/api/v1/dispatch/trips/${encodeURIComponent(trip.id)}/events`, {
         method: 'POST',
-        body: JSON.stringify({ action_name: actionName, ...extra }),
+        body: JSON.stringify({ event_type: eventType, ...(eventType === 'delayed' ? { delay_minutes: 5 } : {}) }),
       })
-      const savedTrip = tripFromApi(response.trip)
+      const response = await apiRequest<ApiDispatchTrip>(`/api/v1/dispatch/trips/${encodeURIComponent(trip.id)}`)
+      const savedTrip = tripFromDispatch(response)
       setTrips((current) => current.map((item) => item.id === savedTrip.id ? savedTrip : item))
       setErrorMessage('')
       return true
@@ -176,16 +234,9 @@ function DispatchPage() {
     const finalStop = destination.trim()
     if (!route || !finalStop) return
 
-    const stops = [...new Set([...stopsText.split(',').map((stop) => stop.trim()).filter(Boolean), finalStop])]
     try {
-      const response = await apiRequest<{ trip: ApiTrip }>('/api/v1/dispatcher/trips', {
-        method: 'POST',
-        body: JSON.stringify({ trip: { route_name: route, destination: finalStop, vehicle: newVehicle, stops } }),
-      })
-      const trip = tripFromApi(response.trip)
-      setTrips((current) => [trip, ...current])
-      logEvent(`${trip.id} created for ${route} with ${newVehicle}.`, 'Created')
-      setErrorMessage('')
+      setErrorMessage('Trip creation is not supported by the current dispatch API.')
+      return
     } catch (error) {
       handleApiError(error)
       return
@@ -202,7 +253,9 @@ function DispatchPage() {
         method: 'POST',
         body: JSON.stringify({ event_type: 'vehicle', vehicle_label: vehicle }),
       })
-      setTrips((current) => current.map((item) => item.id === trip.id ? { ...item, vehicle } : item))
+      const response = await apiRequest<ApiDispatchTrip>(`/api/v1/dispatch/trips/${encodeURIComponent(trip.id)}`)
+      const savedTrip = tripFromDispatch(response)
+      setTrips((current) => current.map((item) => item.id === savedTrip.id ? savedTrip : item))
       setErrorMessage('')
       logEvent(`${trip.id} assigned to ${vehicle}.`, 'Vehicle assignment')
     } catch (error) {
@@ -342,7 +395,7 @@ function DispatchPage() {
                       {trip.departed && !terminal && nextStop && <button className="inline-flex items-center gap-1.5 rounded bg-[#087a59] px-3 py-2 text-[10px] font-semibold text-white hover:bg-[#066447] disabled:cursor-not-allowed disabled:opacity-50" title={dispatcher ? undefined : 'Sign in with Google to make live changes'} disabled={!dispatcher} type="button" onClick={() => recordStopArrival(trip)}><span className="material-symbols-outlined text-sm">where_to_vote</span>Arrived: {nextStop}</button>}
                       {!terminal && trip.status !== 'Delayed' && <button className="inline-flex items-center gap-1 rounded border border-[#ead9b5] bg-white px-3 py-2 text-[10px] font-semibold text-[#86601d] hover:bg-[#fff7e8] disabled:cursor-not-allowed disabled:opacity-50" title={dispatcher ? undefined : 'Sign in with Google to make live changes'} disabled={!dispatcher} type="button" onClick={() => updateStatus(trip, 'Delayed')}><span className="material-symbols-outlined text-sm">warning</span>Mark delayed</button>}
                       {!terminal && <button className="inline-flex items-center gap-1 rounded border border-[#ecd1cf] bg-white px-3 py-2 text-[10px] font-semibold text-[#a33c36] hover:bg-[#fcebea] disabled:cursor-not-allowed disabled:opacity-50" title={dispatcher ? undefined : 'Sign in with Google to make live changes'} disabled={!dispatcher} type="button" onClick={() => updateStatus(trip, 'Canceled')}><span className="material-symbols-outlined text-sm">block</span>Cancel</button>}
-                      {trip.status === 'Delayed' && !terminal && <button className="inline-flex items-center gap-1 rounded border border-[#b7e2cf] bg-white px-3 py-2 text-[10px] font-semibold text-[#087a59] hover:bg-[#e8f4ed] disabled:cursor-not-allowed disabled:opacity-50" title={dispatcher ? undefined : 'Sign in with Google to make live changes'} disabled={!dispatcher} type="button" onClick={() => updateStatus(trip, trip.departed ? 'In progress' : 'Scheduled')}><span className="material-symbols-outlined text-sm">check_circle</span>Clear delay</button>}
+                      {trip.status === 'Delayed' && !terminal && <button className="inline-flex items-center gap-1 rounded border border-[#b7e2cf] bg-white px-3 py-2 text-[10px] font-semibold text-[#087a59] disabled:cursor-not-allowed disabled:opacity-50" title="Clearing delays is not supported by the current dispatch API" disabled type="button"><span className="material-symbols-outlined text-sm">check_circle</span>Clear delay</button>}
                     </div>
                   </article>
                 )
@@ -354,11 +407,11 @@ function DispatchPage() {
             <section className="border border-[#dce4e5] bg-white p-4" aria-labelledby="create-heading">
               <div className="mb-4 flex items-center gap-2"><span className="material-symbols-outlined text-[#126b91]">add_circle</span><div><h2 id="create-heading" className="m-0 font-['Space_Grotesk',sans-serif] text-base font-semibold">Create trip</h2><p className="mb-0 mt-0.5 text-[10px] text-[#687780]">Add a run to the dispatch board</p></div></div>
               <form className="flex flex-col gap-3" onSubmit={createTrip}>
-                <label className="flex flex-col gap-1 text-[10px] font-semibold text-[#687780]">Route name<input className="h-9 rounded border border-[#dce4e5] bg-white px-2.5 text-xs font-normal text-[#192b35] outline-none focus:border-[#3987a3] disabled:bg-[#f4f7f5]" value={routeName} onChange={(event) => setRouteName(event.target.value)} placeholder="e.g. 34 South Michigan" required disabled={!dispatcher} /></label>
-                <label className="flex flex-col gap-1 text-[10px] font-semibold text-[#687780]">Final stop<input className="h-9 rounded border border-[#dce4e5] bg-white px-2.5 text-xs font-normal text-[#192b35] outline-none focus:border-[#3987a3] disabled:bg-[#f4f7f5]" value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="e.g. 95th Red Line Station" required disabled={!dispatcher} /></label>
-                <label className="flex flex-col gap-1 text-[10px] font-semibold text-[#687780]">Intermediate stops <span className="font-normal">(comma-separated)</span><input className="h-9 rounded border border-[#dce4e5] bg-white px-2.5 text-xs font-normal text-[#192b35] outline-none focus:border-[#3987a3] disabled:bg-[#f4f7f5]" value={stopsText} onChange={(event) => setStopsText(event.target.value)} placeholder="Roosevelt, 35th Street" disabled={!dispatcher} /></label>
-                <label className="flex flex-col gap-1 text-[10px] font-semibold text-[#687780]">Assign vehicle<select className="h-9 rounded border border-[#dce4e5] bg-white px-2.5 text-xs font-normal text-[#192b35] outline-none focus:border-[#3987a3] disabled:bg-[#f4f7f5]" value={newVehicle} onChange={(event) => setNewVehicle(event.target.value)} disabled={!dispatcher}>{vehicles.map((option) => <option key={option}>{option}</option>)}</select></label>
-                <button className="mt-1 inline-flex h-10 items-center justify-center gap-2 rounded bg-[#126b91] px-3 text-xs font-semibold text-white hover:bg-[#0e5a7b] disabled:cursor-not-allowed disabled:opacity-60" title={dispatcher ? undefined : 'Sign in with Google to save live changes'} disabled={!dispatcher || authLoading} type="submit"><span className="material-symbols-outlined text-base">add</span>Create trip</button>
+                <label className="flex flex-col gap-1 text-[10px] font-semibold text-[#687780]">Route name<input className="h-9 rounded border border-[#dce4e5] bg-white px-2.5 text-xs font-normal text-[#192b35] outline-none focus:border-[#3987a3] disabled:bg-[#f4f7f5]" value={routeName} onChange={(event) => setRouteName(event.target.value)} placeholder="e.g. 34 South Michigan" required disabled /></label>
+                <label className="flex flex-col gap-1 text-[10px] font-semibold text-[#687780]">Final stop<input className="h-9 rounded border border-[#dce4e5] bg-white px-2.5 text-xs font-normal text-[#192b35] outline-none focus:border-[#3987a3] disabled:bg-[#f4f7f5]" value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="e.g. 95th Red Line Station" required disabled /></label>
+                <label className="flex flex-col gap-1 text-[10px] font-semibold text-[#687780]">Intermediate stops <span className="font-normal">(comma-separated)</span><input className="h-9 rounded border border-[#dce4e5] bg-white px-2.5 text-xs font-normal text-[#192b35] outline-none focus:border-[#3987a3] disabled:bg-[#f4f7f5]" value={stopsText} onChange={(event) => setStopsText(event.target.value)} placeholder="Roosevelt, 35th Street" disabled /></label>
+                <label className="flex flex-col gap-1 text-[10px] font-semibold text-[#687780]">Assign vehicle<select className="h-9 rounded border border-[#dce4e5] bg-white px-2.5 text-xs font-normal text-[#192b35] outline-none focus:border-[#3987a3] disabled:bg-[#f4f7f5]" value={newVehicle} onChange={(event) => setNewVehicle(event.target.value)} disabled>{vehicles.map((option) => <option key={option}>{option}</option>)}</select></label>
+                <button className="mt-1 inline-flex h-10 items-center justify-center gap-2 rounded bg-[#126b91] px-3 text-xs font-semibold text-white hover:bg-[#0e5a7b] disabled:cursor-not-allowed disabled:opacity-60" title="Trip creation is not supported by the current dispatch API" disabled type="submit"><span className="material-symbols-outlined text-base">add</span>Create trip</button>
               </form>
             </section>
 

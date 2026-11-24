@@ -1,13 +1,13 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  route_id: MyString
-  route_short_name: MyString
-  route_long_name: MyString
-  route_color: MyString
+  route_id: route-one
+  route_short_name: "1"
+  route_long_name: Test Route One
+  route_color: "126b91"
 
 two:
-  route_id: MyString
-  route_short_name: MyString
-  route_long_name: MyString
-  route_color: MyString
+  route_id: route-two
+  route_short_name: "2"
+  route_long_name: Test Route Two
+  route_color: "087a59"

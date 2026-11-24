@@ -1,13 +1,15 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  trip_id: MyString
-  stop_id: MyString
-  departure_time: MyString
+  trip_id: trip-one
+  route_id: route-one
+  stop_id: stop-one
+  departure_time: "10:00:00"
   stop_sequence: 1
 
 two:
-  trip_id: MyString
-  stop_id: MyString
-  departure_time: MyString
+  trip_id: trip-two
+  route_id: route-two
+  stop_id: stop-two
+  departure_time: "10:10:00"
   stop_sequence: 1

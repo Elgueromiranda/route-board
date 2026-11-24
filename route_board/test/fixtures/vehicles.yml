@@ -1,9 +1,11 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  code: MyString
-  vehicle_type: MyString
+  label: Shuttle 101
+  status: available
+  route_id: route-one
 
 two:
-  code: MyString
-  vehicle_type: MyString
+  label: Shuttle 202
+  status: available
+  route_id: route-two

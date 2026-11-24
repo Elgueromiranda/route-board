@@ -6,6 +6,8 @@ require "digest"
 class GeoapifyRouteEstimator
   BASE = "https://api.geoapify.com/v1/routing"
   MODE = "bus"
+  CACHE_TTL = 5.minutes
+  FETCH_LOCK_TTL = 30.seconds
 
   def initialize(stops)
     @stops = Array(stops)
@@ -51,13 +53,38 @@ class GeoapifyRouteEstimator
     coordinates = coordinates_for(stops)
     return if coordinates.length < 2 || coordinates.any?(&:blank?)
 
-    "geoapify:trip-legs:v1:#{Digest::SHA256.hexdigest(coordinates.join("|"))}"
+    "geoapify:trip-legs:v2:#{Digest::SHA256.hexdigest(coordinates.join("|"))}"
   end
 
   def self.cached_legs_for(stops)
     cache_key = cache_key_for(stops)
     return unless cache_key
 
-    Rails.cache.fetch(cache_key, expires_in: 60.minutes) { new(stops).call }
+    legs = Rails.cache.read(cache_key)
+    enqueue_fetch(stops, cache_key) if legs.nil?
+    legs
+  end
+
+  def self.fetch_and_cache_for(trip_id)
+    stops = RouteStop.includes(:stop).where(trip_id: trip_id).order(:stop_sequence).to_a
+    cache_key = cache_key_for(stops)
+    return unless cache_key
+
+    legs = new(stops).call
+    Rails.cache.write(cache_key, legs, expires_in: CACHE_TTL) if legs
+    legs
+  end
+
+  def self.enqueue_fetch(stops, cache_key)
+    trip_id = Array(stops).first&.trip_id
+    return if trip_id.blank?
+
+    lock_key = "#{cache_key}:fetching"
+    return unless Rails.cache.write(lock_key, true, expires_in: FETCH_LOCK_TTL, unless_exist: true)
+
+    GeoapifyLegsJob.perform_later(trip_id)
+  rescue StandardError => e
+    Rails.cache.delete(lock_key) if lock_key
+    Rails.logger.warn("[Geoapify] unable to enqueue trip #{trip_id}: #{e.class} #{e.message}")
   end
 end

@@ -1,15 +1,15 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  stop_id: MyString
-  stop_name: MyString
-  stop_desc: MyString
-  stop_lat: MyString
-  stop_lon: MyString
+  stop_id: stop-one
+  stop_name: Test Stop One
+  stop_desc: Test Stop One
+  stop_lat: "40.0"
+  stop_lon: "-73.0"
 
 two:
-  stop_id: MyString
-  stop_name: MyString
-  stop_desc: MyString
-  stop_lat: MyString
-  stop_lon: MyString
+  stop_id: stop-two
+  stop_name: Test Stop Two
+  stop_desc: Test Stop Two
+  stop_lat: "40.1"
+  stop_lon: "-73.1"

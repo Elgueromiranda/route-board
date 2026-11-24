@@ -5,11 +5,11 @@ one:
   action: trip.delayed
   subject_type: Trip
   subject_id: trip-one
-  changes: {}
+  payload: {}
 
 two:
   actor: dispatcher@example.test
   action: trip.departure
   subject_type: Trip
   subject_id: trip-two
-  changes: {}
+  payload: {}

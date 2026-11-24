@@ -1,4 +1,5 @@
 require "pollen"
+require_relative "../../app/middleware/pollen_cors_hijack"
 
 redis_url = ENV.fetch("REDIS_URL", nil) || Rails.application.credentials.redis_url.presence || "redis://127.0.0.1:6379"
 
@@ -14,6 +15,8 @@ Pollen.server.configure do |config|
     Pollen::Stream.find_by(id: stream_id)&.owner if stream_id
   end
 end
+
+Rails.application.config.middleware.insert_before Rack::Cors, PollenCorsHijack
 
 # 3. Start the server in production automatically, or locally if explicitly told
 Pollen.server.start! if Rails.env.production? || ENV["START_POLLEN"] == "true"

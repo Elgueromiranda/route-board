@@ -58,6 +58,6 @@ class GeoapifyRouteEstimator
     cache_key = cache_key_for(stops)
     return unless cache_key
 
-    Rails.cache.fetch(cache_key, expires_in: 5.minutes) { new(stops).call }
+    Rails.cache.fetch(cache_key, expires_in: 60.minutes) { new(stops).call }
   end
 end

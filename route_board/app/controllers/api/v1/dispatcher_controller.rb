@@ -80,6 +80,7 @@ module Api
           stops: stops,
           legs: legs
         )
+        estimates_by_sequence = estimate.index_by(&:stop_sequence)
         route    = Route.find_by(route_id: stops.first&.route_id)
         vehicle  = Vehicle.find_by(route_id: route&.route_id)
 
@@ -97,11 +98,16 @@ module Api
           next_stop_sequence: state[:next_stop_sequence],
           stops: stops.map { |rs|
             stop = rs.stop
+            est = estimates_by_sequence[rs.stop_sequence]
             {
               stop_sequence:  rs.stop_sequence,
               scheduled:      rs.departure_time,
-              estimated:      estimate.find { |e| e.stop_sequence == rs.stop_sequence }&.estimated,
-              observed:       estimate.find { |e| e.stop_sequence == rs.stop_sequence }&.observed,
+              estimate: est && {
+                scheduled_time: rs.departure_time,
+                estimated_time: est.estimated,
+                delay_minutes: state[:delay_minutes]
+              },
+              observed:       est&.observed,
               stop: stop && {
                 stop_id:   stop.stop_id,
                 stop_name: stop.stop_name,

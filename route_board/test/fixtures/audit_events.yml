@@ -1,11 +1,15 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  actor_role: MyString
-  action: MyString
-  details: MyText
+  actor: dispatcher@example.test
+  action: trip.delayed
+  subject_type: Trip
+  subject_id: trip-one
+  payload: {}
 
 two:
-  actor_role: MyString
-  action: MyString
-  details: MyText
+  actor: dispatcher@example.test
+  action: trip.departure
+  subject_type: Trip
+  subject_id: trip-two
+  payload: {}

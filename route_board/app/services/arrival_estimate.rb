@@ -1,6 +1,6 @@
 # app/services/arrival_estimate.rb
 class ArrivalEstimate
-  Result = Struct.new(:stop_sequence, :stop_id, :scheduled, :estimated, :observed, keyword_init: true)
+  Result = Struct.new(:stop_sequence, :stop_id, :scheduled, :estimated, :observed, :available, keyword_init: true)
 
   def self.for(trip_id, delay_minutes: 0, stops: nil, events: nil, legs: nil)
     new(trip_id, delay_minutes: delay_minutes, stops: stops, events: events, legs: legs).call
@@ -18,7 +18,7 @@ class ArrivalEstimate
     stops = (@stops || RouteStop.where(trip_id: @trip_id).order(:stop_sequence).to_a)
       .sort_by(&:stop_sequence)
     return [] if stops.empty?
-    return [] if stops.length > 1 && @legs.length < stops.length - 1
+    available = stops.length <= 1 || @legs.length >= stops.length - 1
 
     events = @events || TripEvent.where(gtfs_trip_id: @trip_id, event_type: "arrived")
                                  .where.not(stop_id: nil)
@@ -29,8 +29,10 @@ class ArrivalEstimate
 
     estimated_seconds = schedule_seconds(stops.first.departure_time) + @delay * 60
     stops.each_with_index.map do |rs, index|
-      if index.positive?
-        estimated_seconds += Float(@legs[index - 1]) + @delay * 60
+      if !available
+        estimated_seconds = schedule_seconds(rs.departure_time)
+      elsif index.positive?
+        estimated_seconds += Float(@legs[index - 1])
       end
 
       Result.new(
@@ -38,7 +40,8 @@ class ArrivalEstimate
         stop_id:       rs.stop_id,
         scheduled:     rs.departure_time,
         estimated:     seconds_to_hms(estimated_seconds),
-        observed:      observed_by_stop[rs.stop_id]&.strftime("%H:%M:%S")
+        observed:      observed_by_stop[rs.stop_id]&.strftime("%H:%M:%S"),
+        available:     available
       )
     end
   end

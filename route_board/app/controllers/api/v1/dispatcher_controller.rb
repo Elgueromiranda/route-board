@@ -28,7 +28,8 @@ module Api
         return render json: { error: "unknown trip" }, status: :not_found unless RouteStop.exists?(trip_id: trip_id)
 
         event_type = params.require(:event_type)
-        actor      = session[:dispatcher][:email]
+        dispatcher = session[:dispatcher]
+        actor      = dispatcher["email"] || dispatcher[:email]
 
         unless %w[departure arrived delayed canceled vehicle].include?(event_type)
           return render json: { error: "invalid event_type" }, status: :unprocessable_entity
@@ -58,7 +59,7 @@ module Api
             action:       "trip.#{event_type}",
             subject_type: "Trip",
             subject_id:   trip_id,
-            changes:      event.payload
+            payload:      event.payload
           )
         end
 

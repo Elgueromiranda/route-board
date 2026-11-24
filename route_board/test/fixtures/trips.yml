@@ -1,11 +1,17 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  route_id: MyString
-  service_id: MyString
-  trip_id: MyString
+  route_id: route-one
+  service_id: service-one
+  trip_id: trip-one
+  route_name: Test Route One
+  destination: Test Stop One
+  vehicle_label: Shuttle 101
 
 two:
-  route_id: MyString
-  service_id: MyString
-  trip_id: MyString
+  route_id: route-two
+  service_id: service-two
+  trip_id: trip-two
+  route_name: Test Route Two
+  destination: Test Stop Two
+  vehicle_label: Shuttle 202

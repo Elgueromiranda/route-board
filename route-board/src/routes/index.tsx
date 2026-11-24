@@ -30,6 +30,7 @@ type Shuttle = {
   trip: {
     trip_id?: string
     service_id?: string
+    delay_minutes?: number
     stops: Stop[]
   }
   bay?: string | null
@@ -38,6 +39,10 @@ type Shuttle = {
 }
 
 type TripEstimatesByStop = Record<string, Record<number, string>>
+type TripEstimatesResponse = {
+  byTrip: TripEstimatesByStop
+  hasPending: boolean
+}
 
 /* ---------- time helpers ---------- */
 
@@ -76,7 +81,14 @@ function hhmm(value?: string | null) {
 }
 
 function getOrderedStops(shuttle: Shuttle): Stop[] {
-  return [...shuttle.trip.stops].sort((a, b) => a.stop_sequence - b.stop_sequence)
+  const seenSequences = new Set<number>()
+  return [...shuttle.trip.stops]
+    .sort((a, b) => a.stop_sequence - b.stop_sequence)
+    .filter((stop) => {
+      if (seenSequences.has(stop.stop_sequence)) return false
+      seenSequences.add(stop.stop_sequence)
+      return true
+    })
 }
 
 function getShuttleKey(shuttle: Shuttle) {
@@ -85,6 +97,12 @@ function getShuttleKey(shuttle: Shuttle) {
     shuttle.code ??
     `${shuttle.route_short_name}-${shuttle.route_long_name}`
   )
+}
+
+function getVehicleLabel(shuttle: Shuttle) {
+  if (shuttle.vehicle?.label) return shuttle.vehicle.label
+  if (shuttle.vehicle?.id != null) return `Vehicle #${shuttle.vehicle.id}`
+  return 'Not assigned'
 }
 
 /* ---------- live ETA from a given departure time ---------- */
@@ -99,53 +117,30 @@ function etaFromTime(time: string | undefined, clock: Date) {
   return { label: `${minutes} min`, minutes }
 }
 
-function normalizeTripEstimates(payload: unknown): TripEstimatesByStop {
-  const result: TripEstimatesByStop = {}
-  const add = (tripId: string, stopSequence: unknown, estimatedTime: unknown) => {
-    const sequence = Number(stopSequence)
-    if (Number.isFinite(sequence) && typeof estimatedTime === 'string') {
-      result[tripId] ??= {}
-      result[tripId][sequence] = estimatedTime
-    }
-  }
-  const visit = (value: unknown, tripId?: string) => {
-    if (Array.isArray(value)) {
-      value.forEach((entry) => visit(entry, tripId))
-      return
-    }
-    if (!value || typeof value !== 'object') return
-
-    const record = value as Record<string, unknown>
-    if (tripId && record.stops && typeof record.stops === 'object' && !Array.isArray(record.stops)) {
-      for (const [sequence, estimatedTime] of Object.entries(record.stops)) {
-        add(tripId, sequence, estimatedTime)
-      }
-      return
-    }
-    if (record.stop_sequence != null && typeof record.estimated_time === 'string') {
-      const estimateTripId = typeof record.trip_id === 'string' ? record.trip_id : tripId
-      if (estimateTripId) add(estimateTripId, record.stop_sequence, record.estimated_time)
-      return
-    }
-    for (const [key, nested] of Object.entries(record)) {
-      if (tripId) {
-        if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
-          const stopRecord = nested as Record<string, unknown>
-          add(tripId, key, stopRecord.estimated_time)
-        } else {
-          add(tripId, key, nested)
-        }
-      } else {
-        visit(nested, key)
-      }
-    }
+function normalizeTripEstimates(payload: unknown): TripEstimatesResponse {
+  const byTrip: TripEstimatesByStop = {}
+  let hasPending = false
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return { byTrip, hasPending }
   }
 
-  const root = payload && typeof payload === 'object' && !Array.isArray(payload)
-    ? (payload as Record<string, unknown>).estimates ?? payload
-    : payload
-  visit(root)
-  return result
+  for (const [tripId, tripPayload] of Object.entries(payload)) {
+    if (!tripPayload || typeof tripPayload !== 'object' || Array.isArray(tripPayload)) continue
+    const record = tripPayload as Record<string, unknown>
+    if (record.pending === true) hasPending = true
+    if (!record.stops || typeof record.stops !== 'object' || Array.isArray(record.stops)) continue
+
+    const stops: Record<number, string> = {}
+    for (const [sequence, estimatedTime] of Object.entries(record.stops)) {
+      const stopSequence = Number(sequence)
+      if (Number.isFinite(stopSequence) && typeof estimatedTime === 'string') {
+        stops[stopSequence] = estimatedTime
+      }
+    }
+    byTrip[tripId] = stops
+  }
+
+  return { byTrip, hasPending }
 }
 
 /* ---------- route ---------- */
@@ -196,7 +191,7 @@ function Home() {
     .map((shuttle) => shuttle.trip.trip_id)
     .filter((tripId): tripId is string => !!tripId)
 
-  const { data: estimatesByTrip = {}, isSuccess: estimatesLoaded } = useQuery<TripEstimatesByStop>({
+  const { data: estimatesResult = { byTrip: {}, hasPending: false }, isSuccess: estimatesLoaded } = useQuery<TripEstimatesResponse>({
     queryKey: ['trip-estimates', paginatedTripIds],
     enabled: paginatedTripIds.length > 0,
     queryFn: async () => {
@@ -206,7 +201,9 @@ function Home() {
       if (!response.ok) throw new Error('Failed to fetch trip estimates')
       return normalizeTripEstimates(await response.json())
     },
+    refetchInterval: (query) => query.state.data?.hasPending ? 2_000 : false,
   })
+  const estimatesByTrip = estimatesResult.byTrip
 
   useEffect(() => {
     setCurrentPage(1)
@@ -258,6 +255,17 @@ function Home() {
     const timer = window.setInterval(() => setClock((c) => new Date(c.getTime() + 1000)), 1000)
     return () => window.clearInterval(timer)
   }, [])
+
+  function resetDemoClock() {
+    const firstDeparture = shuttles[0] ? getOrderedStops(shuttles[0])[0]?.departure_time : undefined
+    const parsed = firstDeparture ? parseScheduleTime(firstDeparture) : null
+    if (!parsed) return
+
+    const demoStart = new Date()
+    demoStart.setHours(parsed.hours, parsed.minutes - 5, 0, 0)
+    clockInitialized.current = true
+    setClock(demoStart)
+  }
 
   /* ------- SSE: invalidate trips + selected estimate ------- */
   useEffect(() => {
@@ -330,6 +338,15 @@ function Home() {
             <span className="material-symbols-outlined text-[17px]">schedule</span>
             <LiveClock time={clock} />
           </span>
+          <button
+            className="grid size-9 shrink-0 place-items-center rounded-md text-[#687780] hover:bg-[#f1f5f3] hover:text-[#126b91]"
+            type="button"
+            aria-label="Reset demo clock"
+            title="Reset demo clock"
+            onClick={resetDemoClock}
+          >
+            <span className="material-symbols-outlined text-[19px]">restart_alt</span>
+          </button>
         </div>
       </header>
 
@@ -515,8 +532,7 @@ function Home() {
                   {selectedShuttle?.route_long_name ?? 'Select a shuttle'}
                 </h2>
                 <p className="m-0 text-[10px] text-[#687780]">
-                  {selectedShuttle?.vehicle?.label ??
-                    (selectedShuttle?.vehicle?.id ? `Vehicle #${selectedShuttle.vehicle.id}` : 'Vehicle assignment unavailable')}
+                  {getVehicleLabel(selectedShuttle)}
                   {selectedShuttle?.trip?.trip_id ? ` · Trip ${selectedShuttle.trip.trip_id}` : ''}
                 </p>
               </div>
@@ -526,7 +542,7 @@ function Home() {
               <div className="flex min-w-0 flex-col gap-[5px] border-r border-[#d5dfdc] px-[5px] sm:px-[7px]">
                 <span className="text-[8px] text-[#687780] sm:text-[9px]">Vehicle</span>
                 <strong className="overflow-hidden text-ellipsis whitespace-nowrap font-['Space_Grotesk',sans-serif] text-[10px] font-semibold sm:text-xs">
-                  {selectedShuttle?.vehicle?.label ?? 'Not assigned'}
+                  {getVehicleLabel(selectedShuttle)}
                 </strong>
               </div>
               <div className="flex min-w-0 flex-col gap-[5px] border-r border-[#d5dfdc] px-[5px] sm:px-[7px]">
@@ -550,7 +566,10 @@ function Home() {
                   visibleStops.map((stop) => {
                     const times = stopTimes(stop)
                     const effective = times.effective
-                    const scheduledDate = scheduleDate(effective, clock)
+                    const delayed = (selectedShuttle.trip.delay_minutes ?? 0) > 0
+                    const displayedTime = delayed && times.hasEstimate ? effective : times.scheduled
+                    const countdownTarget = delayed && times.hasEstimate ? effective : times.scheduled
+                    const scheduledDate = scheduleDate(countdownTarget, clock)
                     const passed = scheduledDate !== null && scheduledDate < clock
                     const nextIndex = orderedStops.findIndex((entry) => {
                       const ref = selectedTripEstimates[entry.stop_sequence] ?? entry.departure_time
@@ -559,9 +578,8 @@ function Home() {
                     const index = orderedStops.findIndex((e) => e.stop_sequence === stop.stop_sequence)
                     const current = !passed && index === nextIndex
                     const stopName = stop.stop?.stop_name ?? stop.stop?.stop_desc ?? `Stop ${stop.stop_sequence}`
-                    const timeLabel = scheduledDate
-                      ? scheduledDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                      : hhmm(effective)
+                    const timeLabel = hhmm(displayedTime)
+                    const countdown = etaFromTime(countdownTarget, clock)
 
                     return (
                       <div
@@ -598,16 +616,23 @@ function Home() {
                             {passed
                               ? 'Scheduled time passed'
                               : current
-                              ? `Due ${etaFromTime(effective, clock).label}`
+                              ? 'Next stop'
                               : `Stop ${stop.stop_sequence}`}
                           </small>
                         </div>
                         <span className="flex flex-col items-end gap-1">
-                          <strong className={`font-['Space_Grotesk',sans-serif] text-[11px] font-semibold ${current ? 'text-[#126b91]' : ''}`}>
-                            {timeLabel}
-                          </strong>
+                          <span className="flex items-center justify-end gap-1.5">
+                            {delayed && times.hasEstimate && (
+                              <small className="text-[9px] text-[#849098] line-through">
+                                {hhmm(times.scheduled)}
+                              </small>
+                            )}
+                            <strong className={`font-['Space_Grotesk',sans-serif] text-[11px] font-semibold ${current ? 'text-[#126b91]' : ''}`}>
+                              {timeLabel}
+                            </strong>
+                          </span>
                           <small className={`text-[9px] ${passed ? 'text-[#087a59]' : current ? 'text-[#126b91]' : 'text-[#687780]'}`}>
-                            {times.hasEstimate ? 'Est.' : 'Sched.'} {hhmm(times.scheduled)}
+                            {countdown.label}
                           </small>
                         </span>
                       </div>

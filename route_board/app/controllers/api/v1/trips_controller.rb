@@ -65,27 +65,30 @@ module Api
                                  .order(:trip_id, :stop_sequence)
                                  .to_a
                                  .group_by(&:trip_id)
-        delays_by_trip = TripEvent.where(gtfs_trip_id: trip_ids, event_type: "delayed")
-                                  .order(:sequence)
-                                  .to_a
-                                  .group_by(&:gtfs_trip_id)
+        events_by_trip = TripEvent.where(gtfs_trip_id: trip_ids)
+                .order(:sequence)
+                .to_a
+                .group_by(&:gtfs_trip_id)
 
         payload = trip_ids.to_h do |trip_id|
           stops = stops_by_trip.fetch(trip_id, [])
+          cacheable = GeoapifyRouteEstimator.cache_key_for(stops).present?
           legs = GeoapifyRouteEstimator.cached_legs_for(stops)
-          delay_minutes = delays_by_trip.fetch(trip_id, []).last&.delay_minutes || 0
+          events = events_by_trip.fetch(trip_id, [])
+          state = TripEvent.state_for(trip_id, events: events)
           estimates = ArrivalEstimate.for(
             trip_id,
-            delay_minutes: delay_minutes,
+            delay_minutes: state[:delay_minutes],
             stops: stops,
-            events: [],
+            events: events,
             legs: legs
           )
 
           stop_times = estimates.to_h do |estimate|
             [estimate.stop_sequence.to_s, format_estimated_time(estimate.estimated)]
           end
-          [trip_id, { stops: stop_times }]
+          available = estimates.any? && estimates.all?(&:available)
+          [trip_id, { available: available, pending: cacheable && !available, stops: stop_times }]
         end
 
         render json: payload

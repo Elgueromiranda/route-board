@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_14_193644) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_24_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -19,7 +19,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_14_193644) do
     t.string "action", null: false
     t.string "subject_type", null: false
     t.string "subject_id", null: false
-    t.json "changes"
+    t.json "payload"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["subject_type", "subject_id"], name: "index_audit_events_on_subject_type_and_subject_id"

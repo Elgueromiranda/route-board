@@ -24,7 +24,7 @@ class TripEvent < ApplicationRecord
                      latest&.event_type == "arrived"  ? "completed" :
                      latest&.event_type == "delayed"  ? "delayed" :
                      latest&.event_type == "departure" ? "in_progress" : "scheduled",
-      delay_minutes: events.select { |event| event.event_type == "delayed" }.last&.delay_minutes.to_i,
+      delay_minutes: events.select { |event| event.event_type == "delayed" }.sum { |event| event.delay_minutes.to_i },
       next_stop_sequence: events.count { |event| event.event_type == "arrived" },
       departed:      events.any? { |event| event.event_type == "departure" },
       last_event:    latest

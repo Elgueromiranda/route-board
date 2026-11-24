@@ -38,7 +38,12 @@ type Shuttle = {
   status?: string
 }
 
-type TripEstimatesByStop = Record<string, Record<number, string>>
+type StopEstimate = {
+  estimated_time: string
+  scheduled_time: string
+  delay_minutes: number
+}
+type TripEstimatesByStop = Record<string, Record<number, StopEstimate>>
 type TripEstimatesResponse = {
   byTrip: TripEstimatesByStop
   hasPending: boolean
@@ -130,11 +135,16 @@ function normalizeTripEstimates(payload: unknown): TripEstimatesResponse {
     if (record.pending === true) hasPending = true
     if (!record.stops || typeof record.stops !== 'object' || Array.isArray(record.stops)) continue
 
-    const stops: Record<number, string> = {}
-    for (const [sequence, estimatedTime] of Object.entries(record.stops)) {
+    const stops: Record<number, StopEstimate> = {}
+    for (const [sequence, estimateData] of Object.entries(record.stops)) {
       const stopSequence = Number(sequence)
-      if (Number.isFinite(stopSequence) && typeof estimatedTime === 'string') {
-        stops[stopSequence] = estimatedTime
+      if (
+        Number.isFinite(stopSequence) &&
+        estimateData &&
+        typeof estimateData === 'object' &&
+        'estimated_time' in estimateData
+      ) {
+        stops[stopSequence] = estimateData as StopEstimate
       }
     }
     byTrip[tripId] = stops
@@ -219,7 +229,7 @@ function Home() {
   const orderedStops = selectedShuttle ? getOrderedStops(selectedShuttle) : []
   const selectedTripEstimates = estimatesByTrip[selectedShuttle?.trip.trip_id ?? ''] ?? {}
   const latestPassedIndex = orderedStops.reduce((latestIndex, stop, index) => {
-    const effectiveTime = selectedTripEstimates[stop.stop_sequence] ?? stop.departure_time
+    const effectiveTime = selectedTripEstimates[stop.stop_sequence]?.estimated_time ?? stop.departure_time
     const stopDate = scheduleDate(effectiveTime, clock)
     return stopDate && stopDate < clock ? index : latestIndex
   }, -1)
@@ -230,8 +240,8 @@ function Home() {
     if (!selectedShuttle) return undefined
     const stops = getOrderedStops(selectedShuttle)
     return stops.find((s) => {
-      const est = estimatesByTrip[selectedShuttle.trip.trip_id ?? '']?.[s.stop_sequence]
-      const ref = est ?? s.departure_time
+      const estimate = estimatesByTrip[selectedShuttle.trip.trip_id ?? '']?.[s.stop_sequence]
+      const ref = estimate?.estimated_time ?? s.departure_time
       const target = scheduleDate(ref, clock)
       return target !== null && target >= clock
     })
@@ -307,12 +317,13 @@ function Home() {
 
   /* ------- helper for a stop: scheduled vs estimated ------- */
   function stopTimes(stop: Stop) {
-    const estimated = selectedTripEstimates[stop.stop_sequence]
+    const estimate = selectedTripEstimates[stop.stop_sequence]
     return {
       scheduled: stop.departure_time,
-      estimated: estimated ?? null,
-      effective: estimated ?? stop.departure_time,
-      hasEstimate: !!estimated,
+      estimated: estimate?.estimated_time ?? null,
+      effective: estimate?.estimated_time ?? stop.departure_time,
+      hasEstimate: !!estimate,
+      delayMinutes: estimate?.delay_minutes ?? 0,
     }
   }
 
@@ -416,13 +427,13 @@ function Home() {
               const stops = getOrderedStops(shuttle)
               const tripEstimates = estimatesByTrip[shuttle.trip.trip_id ?? ''] ?? {}
               const rowNext = stops.find((s) => {
-                const est = tripEstimates[s.stop_sequence]
-                const target = scheduleDate(est ?? s.departure_time, clock)
+                const estimate = tripEstimates[s.stop_sequence]
+                const target = scheduleDate(estimate?.estimated_time ?? s.departure_time, clock)
                 return target !== null && target >= clock
               })
               const selected = selectedShuttle != null && getShuttleKey(shuttle) === selectedShuttleKey
               const rowEffective = rowNext
-                ? tripEstimates[rowNext.stop_sequence]
+                ? tripEstimates[rowNext.stop_sequence]?.estimated_time
                   ?? rowNext.departure_time
                 : undefined
               const eta = etaFromTime(rowEffective, clock)
@@ -470,9 +481,21 @@ function Home() {
                   </div>
 
                   <div className={`flex flex-col items-end gap-[5px] ${isDelayed ? 'text-[#a75a16]' : 'text-[#087a59]'}`}>
-                    <strong className="font-['Space_Grotesk',sans-serif] text-[20px] leading-[.9] font-semibold">
-                      {paginatedTripIds.length > 0 && !estimatesLoaded ? '—' : eta.label}
-                    </strong>
+                    {isDelayed && rowNext && (
+                      <span className="text-[11px] text-[#849098] line-through">
+                        {hhmm(rowNext.departure_time)}
+                      </span>
+                    )}
+                    <div className="flex items-center gap-1.5">
+                      <strong className="font-['Space_Grotesk',sans-serif] text-[20px] leading-[.9] font-semibold">
+                        {paginatedTripIds.length > 0 && !estimatesLoaded ? '—' : eta.label}
+                      </strong>
+                      {isDelayed && (shuttle.trip.delay_minutes ?? 0) > 0 && (
+                        <span className="rounded bg-[#fef3c7] px-1.5 py-0.5 text-[9px] font-bold text-[#a75a16] uppercase">
+                          +{shuttle.trip.delay_minutes}M DELAY
+                        </span>
+                      )}
+                    </div>
                     <span className="inline-flex items-center gap-[5px] whitespace-nowrap text-[9px] font-bold uppercase">
                       {!isDelayed && <i className="size-1.5 rounded-full bg-current" />}
                       {statusLabel}
@@ -572,7 +595,7 @@ function Home() {
                     const scheduledDate = scheduleDate(countdownTarget, clock)
                     const passed = scheduledDate !== null && scheduledDate < clock
                     const nextIndex = orderedStops.findIndex((entry) => {
-                      const ref = selectedTripEstimates[entry.stop_sequence] ?? entry.departure_time
+                      const ref = selectedTripEstimates[entry.stop_sequence]?.estimated_time ?? entry.departure_time
                       return scheduleSeconds(ref) >= clock.getHours() * 3600 + clock.getMinutes() * 60 + clock.getSeconds()
                     })
                     const index = orderedStops.findIndex((e) => e.stop_sequence === stop.stop_sequence)
@@ -630,6 +653,11 @@ function Home() {
                             <strong className={`font-['Space_Grotesk',sans-serif] text-[11px] font-semibold ${current ? 'text-[#126b91]' : ''}`}>
                               {timeLabel}
                             </strong>
+                            {times.delayMinutes > 0 && (
+                              <span className="rounded bg-[#fef3c7] px-1 py-0.5 text-[8px] font-bold text-[#a75a16] uppercase">
+                                +{times.delayMinutes}M
+                              </span>
+                            )}
                           </span>
                           <small className={`text-[9px] ${passed ? 'text-[#087a59]' : current ? 'text-[#126b91]' : 'text-[#687780]'}`}>
                             {countdown.label}

@@ -19,12 +19,24 @@ class TripEvent < ApplicationRecord
 
   def self.state_from(events)
     latest = events.last
+    last_delay_reset_index = events.rindex do |event|
+      event.event_type == "delayed" && event.delay_minutes.to_i.zero?
+    end
+    active_events = last_delay_reset_index ? events.drop(last_delay_reset_index + 1) : events
+    delay_minutes = active_events.select { |event| event.event_type == "delayed" }
+                                 .sum { |event| event.delay_minutes.to_i }
+    status_event = if latest&.event_type == "delayed" && delay_minutes.zero?
+      events[0...-1].reverse.find { |event| event.event_type != "delayed" }
+    else
+      latest
+    end
+
     {
-      status:        latest&.event_type == "canceled" ? "canceled" :
-                     latest&.event_type == "arrived"  ? "completed" :
-                     latest&.event_type == "delayed"  ? "delayed" :
-                     latest&.event_type == "departure" ? "in_progress" : "scheduled",
-      delay_minutes: events.select { |event| event.event_type == "delayed" }.sum { |event| event.delay_minutes.to_i },
+      status:        status_event&.event_type == "canceled" ? "canceled" :
+                     status_event&.event_type == "arrived"  ? "completed" :
+                     latest&.event_type == "delayed" && delay_minutes.positive? ? "delayed" :
+                     status_event&.event_type == "departure" ? "in_progress" : "scheduled",
+      delay_minutes: delay_minutes,
       next_stop_sequence: events.count { |event| event.event_type == "arrived" },
       departed:      events.any? { |event| event.event_type == "departure" },
       last_event:    latest

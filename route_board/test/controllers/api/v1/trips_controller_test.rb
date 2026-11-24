@@ -56,8 +56,8 @@ class Api::V1::TripsControllerTest < ActionDispatch::IntegrationTest
       "available" => true,
       "pending" => false,
       "stops" => {
-        "1" => "10:02 AM",
-        "2" => "10:05 AM"
+        "1" => { "estimated_time" => "10:02 AM", "scheduled_time" => "10:00 AM", "delay_minutes" => 2 },
+        "2" => { "estimated_time" => "10:05 AM", "scheduled_time" => "10:10 AM", "delay_minutes" => 2 }
       }
     }, response.parsed_body.fetch("trip-estimates"))
   end
@@ -74,8 +74,8 @@ class Api::V1::TripsControllerTest < ActionDispatch::IntegrationTest
       "available" => false,
       "pending" => true,
       "stops" => {
-        "1" => "10:00 AM",
-        "2" => "10:10 AM"
+        "1" => { "estimated_time" => "10:00 AM", "scheduled_time" => "10:00 AM", "delay_minutes" => 0 },
+        "2" => { "estimated_time" => "10:10 AM", "scheduled_time" => "10:10 AM", "delay_minutes" => 0 }
       }
     }, response.parsed_body.fetch("trip-pending"))
   end
@@ -100,8 +100,8 @@ class Api::V1::TripsControllerTest < ActionDispatch::IntegrationTest
       "available" => true,
       "pending" => false,
       "stops" => {
-        "1" => "10:07 AM",
-        "2" => "10:10 AM"
+        "1" => { "estimated_time" => "10:07 AM", "scheduled_time" => "10:00 AM", "delay_minutes" => 7 },
+        "2" => { "estimated_time" => "10:10 AM", "scheduled_time" => "10:10 AM", "delay_minutes" => 7 }
       }
     }, response.parsed_body.fetch("trip-delay-total"))
   end

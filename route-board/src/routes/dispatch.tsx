@@ -276,8 +276,45 @@ function DispatchPage() {
   }
 
   async function updateStatus(trip: Trip, status: TripStatus) {
-    if (!dispatcher || !await persistTripAction(trip, 'status', { status })) return
-    logEvent(`${trip.id} marked ${status.toLowerCase()}.`, 'Status')
+    if (!dispatcher) return
+    try {
+      const eventType = status === 'Delayed' ? 'delayed' : status === 'Canceled' ? 'canceled' : null
+      if (!eventType) return
+
+      await apiRequest(`/api/v1/dispatch/trips/${encodeURIComponent(trip.id)}/events`, {
+        method: 'POST',
+        body: JSON.stringify({
+          event_type: eventType,
+          ...(eventType === 'delayed' ? { delay_minutes: 5 } : {}),
+        }),
+      })
+
+      const response = await apiRequest<ApiDispatchTrip>(`/api/v1/dispatch/trips/${encodeURIComponent(trip.id)}`)
+      const savedTrip = tripFromDispatch(response)
+      setTrips((current) => current.map((item) => item.id === savedTrip.id ? savedTrip : item))
+      setErrorMessage('')
+      logEvent(`${trip.id} marked ${status.toLowerCase()}.`, 'Status')
+    } catch (error) {
+      handleApiError(error)
+    }
+  }
+
+  async function clearDelay(trip: Trip) {
+    if (!dispatcher) return
+    try {
+      await apiRequest(`/api/v1/dispatch/trips/${encodeURIComponent(trip.id)}/events`, {
+        method: 'POST',
+        body: JSON.stringify({ event_type: 'delayed', delay_minutes: 0 }),
+      })
+
+      const response = await apiRequest<ApiDispatchTrip>(`/api/v1/dispatch/trips/${encodeURIComponent(trip.id)}`)
+      const savedTrip = tripFromDispatch(response)
+      setTrips((current) => current.map((item) => item.id === savedTrip.id ? savedTrip : item))
+      setErrorMessage('')
+      logEvent(`${trip.id} delay cleared.`, 'Status')
+    } catch (error) {
+      handleApiError(error)
+    }
   }
 
   async function signOut() {
@@ -391,11 +428,11 @@ function DispatchPage() {
                     </div>
 
                     <div className="mt-3 flex flex-wrap items-center gap-2">
-                      {!trip.departed && !terminal && <button className="inline-flex items-center gap-1.5 rounded bg-[#126b91] px-3 py-2 text-[10px] font-semibold text-white hover:bg-[#0e5a7b] disabled:cursor-not-allowed disabled:opacity-50" title={dispatcher ? undefined : 'Sign in with Google to make live changes'} disabled={!dispatcher} type="button" onClick={() => recordDeparture(trip)}><span className="material-symbols-outlined text-sm">departure_board</span>Record departure</button>}
-                      {trip.departed && !terminal && nextStop && <button className="inline-flex items-center gap-1.5 rounded bg-[#087a59] px-3 py-2 text-[10px] font-semibold text-white hover:bg-[#066447] disabled:cursor-not-allowed disabled:opacity-50" title={dispatcher ? undefined : 'Sign in with Google to make live changes'} disabled={!dispatcher} type="button" onClick={() => recordStopArrival(trip)}><span className="material-symbols-outlined text-sm">where_to_vote</span>Arrived: {nextStop}</button>}
-                      {!terminal && trip.status !== 'Delayed' && <button className="inline-flex items-center gap-1 rounded border border-[#ead9b5] bg-white px-3 py-2 text-[10px] font-semibold text-[#86601d] hover:bg-[#fff7e8] disabled:cursor-not-allowed disabled:opacity-50" title={dispatcher ? undefined : 'Sign in with Google to make live changes'} disabled={!dispatcher} type="button" onClick={() => updateStatus(trip, 'Delayed')}><span className="material-symbols-outlined text-sm">warning</span>Mark delayed</button>}
-                      {!terminal && <button className="inline-flex items-center gap-1 rounded border border-[#ecd1cf] bg-white px-3 py-2 text-[10px] font-semibold text-[#a33c36] hover:bg-[#fcebea] disabled:cursor-not-allowed disabled:opacity-50" title={dispatcher ? undefined : 'Sign in with Google to make live changes'} disabled={!dispatcher} type="button" onClick={() => updateStatus(trip, 'Canceled')}><span className="material-symbols-outlined text-sm">block</span>Cancel</button>}
-                      {trip.status === 'Delayed' && !terminal && <button className="inline-flex items-center gap-1 rounded border border-[#b7e2cf] bg-white px-3 py-2 text-[10px] font-semibold text-[#087a59] disabled:cursor-not-allowed disabled:opacity-50" title="Clearing delays is not supported by the current dispatch API" disabled type="button"><span className="material-symbols-outlined text-sm">check_circle</span>Clear delay</button>}
+                      {!trip.departed && !terminal && <button className="inline-flex items-center gap-1.5 rounded bg-[#126b91] px-3 py-2 text-[10px] font-semibold text-white hover:bg-[#0e5a7b]" type="button" onClick={() => recordDeparture(trip)}><span className="material-symbols-outlined text-sm">departure_board</span>Record departure</button>}
+                      {trip.departed && !terminal && nextStop && <button className="inline-flex items-center gap-1.5 rounded bg-[#087a59] px-3 py-2 text-[10px] font-semibold text-white hover:bg-[#066447]" type="button" onClick={() => recordStopArrival(trip)}><span className="material-symbols-outlined text-sm">where_to_vote</span>Arrived: {nextStop}</button>}
+                      {!terminal && trip.status !== 'Delayed' && <button className="inline-flex items-center gap-1 rounded border border-[#ead9b5] bg-white px-3 py-2 text-[10px] font-semibold text-[#86601d] hover:bg-[#fff7e8]" type="button" onClick={() => updateStatus(trip, 'Delayed')}><span className="material-symbols-outlined text-sm">warning</span>Mark delayed</button>}
+                      {!terminal && <button className="inline-flex items-center gap-1 rounded border border-[#ecd1cf] bg-white px-3 py-2 text-[10px] font-semibold text-[#a33c36] hover:bg-[#fcebea]" type="button" onClick={() => updateStatus(trip, 'Canceled')}><span className="material-symbols-outlined text-sm">block</span>Cancel</button>}
+                      {trip.status === 'Delayed' && !terminal && <button className="inline-flex items-center gap-1 rounded border border-[#b7e2cf] bg-white px-3 py-2 text-[10px] font-semibold text-[#087a59] hover:bg-[#e1f4eb]" type="button" onClick={() => clearDelay(trip)}><span className="material-symbols-outlined text-sm">check_circle</span>Clear delay</button>}
                     </div>
                   </article>
                 )

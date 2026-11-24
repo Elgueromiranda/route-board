@@ -85,7 +85,14 @@ module Api
           )
 
           stop_times = estimates.to_h do |estimate|
-            [estimate.stop_sequence.to_s, format_estimated_time(estimate.estimated)]
+            [
+              estimate.stop_sequence.to_s,
+              {
+                estimated_time: format_estimated_time(estimate.estimated),
+                scheduled_time: format_estimated_time(estimate.scheduled),
+                delay_minutes: state[:delay_minutes]
+              }
+            ]
           end
           available = estimates.any? && estimates.all?(&:available)
           [trip_id, { available: available, pending: cacheable && !available, stops: stop_times }]

@@ -11,6 +11,9 @@ Rails.application.routes.draw do
       # public board
       get "trips",        to: "trips#index"
       get "trips/estimates", to: "trips#estimates"
+      get "trips/stops", to: "trips#stops"
+      get "trips/form_options", to: "trips#form_options"
+      post "trips", to: "trips#create"
       get "trips/updates", to: "trip_updates#show"
 
       # dispatcher

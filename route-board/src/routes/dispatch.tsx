@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { apiBase } from '../lib/api'
 
@@ -126,7 +126,6 @@ function DispatchPage() {
   const [dispatcher, setDispatcher] = useState<Dispatcher | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [tripsLoading, setTripsLoading] = useState(true)
-  const authPopup = useRef<Window | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const [activities, setActivities] = useState<Activity[]>([])
   const [routeName, setRouteName] = useState('')
@@ -170,25 +169,10 @@ function DispatchPage() {
       }
     }
 
-    function onAuthPopupMessage(event: MessageEvent<{ type?: string; status?: string }>) {
-      if (event.origin !== new URL(apiBase).origin || event.source !== authPopup.current || event.data?.type !== 'routeboard-auth') return
-      authPopup.current = null
-      if (event.data.status === 'success') {
-        setErrorMessage('')
-        void loadAuthorizedWorkspace()
-      } else {
-        setDispatcher(null)
-        setAuthLoading(false)
-        setErrorMessage(event.data.status === 'unauthorized' ? 'Access denied: unauthorized account' : 'Google sign-in failed. Please try again.')
-      }
-    }
-
-    window.addEventListener('message', onAuthPopupMessage)
     void loadAuthorizedWorkspace()
 
     return () => {
       active = false
-      window.removeEventListener('message', onAuthPopupMessage)
     }
   }, [])
 
@@ -328,13 +312,7 @@ function DispatchPage() {
   }
 
   function openSignIn() {
-    const popup = window.open(`${apiBase}/auth/google`, 'routeboard-google-signin', 'popup,width=520,height=680,resizable,scrollbars')
-    if (!popup) {
-      setErrorMessage('Your browser blocked the sign-in popup. Allow popups for this site and try again.')
-      return
-    }
-    authPopup.current = popup
-    popup.focus()
+    window.location.assign(`${apiBase}/auth/google`)
   }
 
   const openTrips = trips.filter((trip) => trip.status !== 'Completed' && trip.status !== 'Canceled').length

@@ -6,7 +6,7 @@ class SessionsController < ApplicationController
     allowed_email = ENV.fetch("DISPATCHER_ADMIN_EMAIL", "eliasmiranda.la@gmail.com").downcase
 
     unless email&.downcase == allowed_email
-      render_popup("unauthorized", status: :forbidden)
+      redirect_to frontend_dispatch_url(auth_error: "unauthorized"), allow_other_host: true
       return
     end
 
@@ -17,7 +17,7 @@ class SessionsController < ApplicationController
       image: auth.dig("info", "image")
     }
 
-    render_popup("success")
+    redirect_to frontend_dispatch_url, allow_other_host: true
   end
 
   def destroy
@@ -26,15 +26,16 @@ class SessionsController < ApplicationController
   end
 
   def failure
-    render_popup("failed", status: :unauthorized)
+    redirect_to frontend_dispatch_url(auth_error: "failed"), allow_other_host: true
   end
 
   private
 
-  def render_popup(result, status: :ok)
+  def frontend_dispatch_url(auth_error: nil)
     frontend_url = URI.parse(ENV.fetch("FRONTEND_URL", "http://localhost:5173/dispatch"))
-    @frontend_origin = frontend_url.origin
-    @auth_result = result
-    render "auth/popup", layout: false, status: status
+    frontend_url.path = "/dispatch"
+    frontend_url.query = auth_error ? URI.encode_www_form(auth_error: auth_error) : nil
+    frontend_url.fragment = nil
+    frontend_url.to_s
   end
 end

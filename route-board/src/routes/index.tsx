@@ -369,7 +369,7 @@ function Home() {
             </div>
             <h1 id="page-title" className="my-2 font-['Space_Grotesk',sans-serif] text-[27px] leading-tight font-semibold sm:text-[32px]">Public Terminal Arrivals</h1>
             <p className="m-0 max-w-[630px] text-xs leading-relaxed text-[#687780] sm:text-sm">
-              Real-time arrival estimates, current platform gates, and stop progression for campus and downtown connections.
+              arrival estimates, current platform gates, and stop progression for campus and downtown connections.
             </p>
           </div>
           <div className="flex w-full gap-1 rounded-lg border border-[#dce4e5] bg-[#eaf0ed] p-[5px] lg:w-auto" aria-label="Hub information">

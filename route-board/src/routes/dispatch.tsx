@@ -9,6 +9,8 @@ type EventKind = 'Created' | 'Departure' | 'Stop arrival' | 'Vehicle assignment'
 
 type Trip = {
   id: string
+  routeId?: string
+  routeShortName?: string
   route: string
   destination: string
   vehicle: string
@@ -32,6 +34,8 @@ type Dispatcher = {
 }
 
 type ApiRouteTrip = {
+  route_id?: string
+  route_short_name?: string
   route_long_name: string
   status: string
   vehicle?: { id: number | string; label: string | null } | null
@@ -46,13 +50,34 @@ type ApiRouteTrip = {
 
 type ApiDispatchTrip = {
   trip_id: string
-  route?: { long_name?: string | null } | null
+  route?: { route_id?: string | null; short_name?: string | null; long_name?: string | null } | null
   vehicle?: { id: number | string; label: string | null } | null
   status: string
   next_stop_sequence: number
   stops: Array<{ stop?: { stop_name?: string | null; stop_desc?: string | null } | null }>
   events: Array<{ event_type: string }>
 }
+
+type ApiStop = {
+  stop_id: string
+  stop_name?: string | null
+  stop_desc?: string | null
+}
+
+type ApiVehicle = {
+  id: number | string
+  label: string | null
+  status: string
+  route_id: string | null
+}
+
+type ApiFormOptions = {
+  stops: ApiStop[]
+  vehicles: ApiVehicle[]
+  service_ids: string[]
+}
+
+const vehicles = ['Shuttle 204', 'Shuttle 318', 'Shuttle 409', 'Shuttle 512']
 
 class ApiError extends Error {
   constructor(readonly status: number, message: string) {
@@ -91,6 +116,8 @@ function tripFromIndex(route: ApiRouteTrip): Trip | null {
 
   return {
     id,
+    routeId: route.route_id,
+    routeShortName: route.route_short_name,
     route: route.route_long_name,
     destination: stops.at(-1)?.stop?.stop_desc ?? stops.at(-1)?.stop?.stop_name ?? '',
     vehicle: route.vehicle?.label ?? (route.vehicle?.id != null ? `Vehicle #${route.vehicle.id}` : ''),
@@ -105,6 +132,8 @@ function tripFromDispatch(trip: ApiDispatchTrip): Trip {
   const stops = trip.stops.map((stop) => stop.stop?.stop_name ?? stop.stop?.stop_desc ?? 'Unknown stop')
   return {
     id: trip.trip_id,
+    routeId: trip.route?.route_id ?? undefined,
+    routeShortName: trip.route?.short_name ?? undefined,
     route: trip.route?.long_name ?? 'Unknown route',
     destination: stops.at(-1) ?? '',
     vehicle: trip.vehicle?.label ?? (trip.vehicle?.id != null ? `Vehicle #${trip.vehicle.id}` : ''),
@@ -114,8 +143,6 @@ function tripFromDispatch(trip: ApiDispatchTrip): Trip {
     status: normalizedStatus(trip.status),
   }
 }
-
-const vehicles = ['Shuttle 204', 'Shuttle 318', 'Shuttle 409', 'Shuttle 512']
 
 function timestamp() {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -131,7 +158,16 @@ function DispatchPage() {
   const [routeName, setRouteName] = useState('')
   const [destination, setDestination] = useState('')
   const [stopsText, setStopsText] = useState('')
-  const [newVehicle, setNewVehicle] = useState(vehicles[0])
+  const [newVehicle, setNewVehicle] = useState('')
+  const [formStops, setFormStops] = useState<ApiStop[]>([])
+  const [availableVehicles, setAvailableVehicles] = useState<ApiVehicle[]>([])
+  const [serviceIds, setServiceIds] = useState<string[]>([])
+  const [serviceId, setServiceId] = useState('')
+  const [selectedStop, setSelectedStop] = useState('')
+  const [selectedStopIds, setSelectedStopIds] = useState<string[]>([])
+  const [pickedStopIds, setPickedStopIds] = useState<string[]>([])
+  const [creatingTrip, setCreatingTrip] = useState(false)
+  const [delayMinutesByTrip, setDelayMinutesByTrip] = useState<Record<string, string>>({})
 
   useEffect(() => {
     let active = true
@@ -144,9 +180,17 @@ function DispatchPage() {
         const identity = await apiRequest<Dispatcher>('/api/v1/dispatch/me')
         if (!active) return
         setDispatcher(identity)
-        const response = await apiRequest<ApiRouteTrip[]>('/api/v1/trips')
+        const [response, options] = await Promise.all([
+          apiRequest<ApiRouteTrip[]>('/api/v1/trips'),
+          apiRequest<ApiFormOptions>('/api/v1/trips/form_options'),
+        ])
         if (active) {
           setTrips(response.map(tripFromIndex).filter((trip): trip is Trip => trip !== null))
+          setFormStops(options.stops)
+          setAvailableVehicles(options.vehicles.filter((vehicle) => vehicle.status === 'available' && vehicle.route_id == null))
+          setNewVehicle(String(options.vehicles.find((vehicle) => vehicle.status === 'available' && vehicle.route_id == null)?.id ?? ''))
+          setServiceIds(options.service_ids)
+          setServiceId(options.service_ids[0] ?? '')
           setErrorMessage('')
         }
       } catch (error) {
@@ -211,23 +255,66 @@ function DispatchPage() {
     setActivities((current) => [{ id: Date.now(), time: timestamp(), message, kind }, ...current])
   }
 
+  function handleAddStop() {
+    if (!selectedStop || pickedStopIds.includes(selectedStop)) return
+    setSelectedStopIds((current) => [...current, selectedStop])
+    setPickedStopIds((current) => [...current, selectedStop])
+    setSelectedStop('')
+  }
+
+  function handleRemoveStopAt(index: number) {
+    setSelectedStopIds((current) => current.filter((_, stopIndex) => stopIndex !== index))
+  }
+
   async function createTrip(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!dispatcher) return
+    if (!dispatcher || !serviceId || !newVehicle || selectedStopIds.length === 0) return
     const route = routeName.trim()
-    const finalStop = destination.trim()
-    if (!route || !finalStop) return
+    const routeShortName = destination.trim()
+    if (!route || !routeShortName) return
 
-    try {
-      setErrorMessage('Trip creation is not supported by the current dispatch API.')
-      return
-    } catch (error) {
-      handleApiError(error)
+    const duplicateRoute = trips.some((trip) =>
+      trip.route.trim().toLowerCase() === route.toLowerCase() ||
+      trip.routeShortName?.trim().toLowerCase() === routeShortName.toLowerCase(),
+    )
+    if (duplicateRoute) {
+      setErrorMessage('A route with this long or short name already exists.')
       return
     }
-    setRouteName('')
-    setDestination('')
-    setStopsText('')
+
+    try {
+      setCreatingTrip(true)
+      const response = await apiRequest<ApiRouteTrip>('/api/v1/trips', {
+        method: 'POST',
+        body: JSON.stringify({
+          route_long_name: route,
+          route_short_name: routeShortName,
+          stop_ids: selectedStopIds,
+          service_id: serviceId,
+          departure_time: stopsText.trim() || '08:00:00',
+          vehicle_id: newVehicle,
+        }),
+      })
+      const savedTrip = tripFromIndex(response)
+      if (!savedTrip) throw new Error('The server created a trip without a trip ID.')
+      setTrips((current) => [...current, savedTrip])
+      logEvent(`${savedTrip.id} created on ${savedTrip.route}.`, 'Created')
+      setRouteName('')
+      setDestination('')
+      setStopsText('')
+      setSelectedStop('')
+      setSelectedStopIds([])
+      setPickedStopIds([])
+      setServiceId((current) => serviceIds.includes(current) ? current : serviceIds[0] ?? '')
+      const remainingVehicles = availableVehicles.filter((vehicle) => String(vehicle.id) !== newVehicle)
+      setAvailableVehicles(remainingVehicles)
+      setNewVehicle(remainingVehicles[0]?.id.toString() ?? '')
+      setErrorMessage('')
+    } catch (error) {
+      handleApiError(error)
+    } finally {
+      setCreatingTrip(false)
+    }
   }
 
   async function assignVehicle(trip: Trip, vehicle: string) {
@@ -259,17 +346,21 @@ function DispatchPage() {
     logEvent(`${trip.id} arrived at ${arrivedStop}.${completed ? ' Trip completed.' : ''}`, 'Stop arrival')
   }
 
-  async function updateStatus(trip: Trip, status: TripStatus) {
+  async function updateStatus(trip: Trip, status: TripStatus, delayMinutes = 5) {
     if (!dispatcher) return
     try {
       const eventType = status === 'Delayed' ? 'delayed' : status === 'Canceled' ? 'canceled' : null
       if (!eventType) return
+      if (eventType === 'delayed' && (!Number.isInteger(delayMinutes) || delayMinutes < 1 || delayMinutes > 1440)) {
+        setErrorMessage('Delay must be between 1 and 1440 minutes.')
+        return
+      }
 
       await apiRequest(`/api/v1/dispatch/trips/${encodeURIComponent(trip.id)}/events`, {
         method: 'POST',
         body: JSON.stringify({
           event_type: eventType,
-          ...(eventType === 'delayed' ? { delay_minutes: 5 } : {}),
+          ...(eventType === 'delayed' ? { delay_minutes: delayMinutes } : {}),
         }),
       })
 
@@ -318,6 +409,7 @@ function DispatchPage() {
   const openTrips = trips.filter((trip) => trip.status !== 'Completed' && trip.status !== 'Canceled').length
   const onRoute = trips.filter((trip) => trip.departed && trip.status !== 'Completed' && trip.status !== 'Canceled').length
   const delayedTrips = trips.filter((trip) => trip.status === 'Delayed').length
+  const availableNextStops = formStops.filter((stop) => !pickedStopIds.includes(stop.stop_id))
 
   if (!dispatcher) {
     return (
@@ -408,7 +500,13 @@ function DispatchPage() {
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       {!trip.departed && !terminal && <button className="inline-flex items-center gap-1.5 rounded bg-[#126b91] px-3 py-2 text-[10px] font-semibold text-white hover:bg-[#0e5a7b]" type="button" onClick={() => recordDeparture(trip)}><span className="material-symbols-outlined text-sm">departure_board</span>Record departure</button>}
                       {trip.departed && !terminal && nextStop && <button className="inline-flex items-center gap-1.5 rounded bg-[#087a59] px-3 py-2 text-[10px] font-semibold text-white hover:bg-[#066447]" type="button" onClick={() => recordStopArrival(trip)}><span className="material-symbols-outlined text-sm">where_to_vote</span>Arrived: {nextStop}</button>}
-                      {!terminal && trip.status !== 'Delayed' && <button className="inline-flex items-center gap-1 rounded border border-[#ead9b5] bg-white px-3 py-2 text-[10px] font-semibold text-[#86601d] hover:bg-[#fff7e8]" type="button" onClick={() => updateStatus(trip, 'Delayed')}><span className="material-symbols-outlined text-sm">warning</span>Mark delayed</button>}
+                      {!terminal && trip.status !== 'Delayed' && <>
+                        <label className="flex items-center gap-1.5 text-[10px] font-semibold text-[#86601d]">Delay
+                          <input className="h-8 w-[68px] rounded border border-[#ead9b5] bg-white px-2 text-[11px] text-[#192b35] outline-none focus:border-[#c48a32]" aria-label={`Delay minutes for ${trip.id}`} type="number" min="1" max="1440" step="1" value={delayMinutesByTrip[trip.id] ?? '5'} onChange={(event) => setDelayMinutesByTrip((current) => ({ ...current, [trip.id]: event.target.value }))} disabled={!dispatcher} />
+                          <span className="font-normal">min</span>
+                        </label>
+                        <button className="inline-flex items-center gap-1 rounded border border-[#ead9b5] bg-white px-3 py-2 text-[10px] font-semibold text-[#86601d] hover:bg-[#fff7e8]" type="button" onClick={() => updateStatus(trip, 'Delayed', Number(delayMinutesByTrip[trip.id] ?? '5'))}><span className="material-symbols-outlined text-sm">warning</span>Mark delayed</button>
+                      </>}
                       {!terminal && <button className="inline-flex items-center gap-1 rounded border border-[#ecd1cf] bg-white px-3 py-2 text-[10px] font-semibold text-[#a33c36] hover:bg-[#fcebea]" type="button" onClick={() => updateStatus(trip, 'Canceled')}><span className="material-symbols-outlined text-sm">block</span>Cancel</button>}
                       {trip.status === 'Delayed' && !terminal && <button className="inline-flex items-center gap-1 rounded border border-[#b7e2cf] bg-white px-3 py-2 text-[10px] font-semibold text-[#087a59] hover:bg-[#e1f4eb]" type="button" onClick={() => clearDelay(trip)}><span className="material-symbols-outlined text-sm">check_circle</span>Clear delay</button>}
                     </div>
@@ -422,11 +520,28 @@ function DispatchPage() {
             <section className="border border-[#dce4e5] bg-white p-4" aria-labelledby="create-heading">
               <div className="mb-4 flex items-center gap-2"><span className="material-symbols-outlined text-[#126b91]">add_circle</span><div><h2 id="create-heading" className="m-0 font-['Space_Grotesk',sans-serif] text-base font-semibold">Create trip</h2><p className="mb-0 mt-0.5 text-[10px] text-[#687780]">Add a run to the dispatch board</p></div></div>
               <form className="flex flex-col gap-3" onSubmit={createTrip}>
-                <label className="flex flex-col gap-1 text-[10px] font-semibold text-[#687780]">Route name<input className="h-9 rounded border border-[#dce4e5] bg-white px-2.5 text-xs font-normal text-[#192b35] outline-none focus:border-[#3987a3] disabled:bg-[#f4f7f5]" value={routeName} onChange={(event) => setRouteName(event.target.value)} placeholder="e.g. 34 South Michigan" required disabled /></label>
-                <label className="flex flex-col gap-1 text-[10px] font-semibold text-[#687780]">Final stop<input className="h-9 rounded border border-[#dce4e5] bg-white px-2.5 text-xs font-normal text-[#192b35] outline-none focus:border-[#3987a3] disabled:bg-[#f4f7f5]" value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="e.g. 95th Red Line Station" required disabled /></label>
-                <label className="flex flex-col gap-1 text-[10px] font-semibold text-[#687780]">Intermediate stops <span className="font-normal">(comma-separated)</span><input className="h-9 rounded border border-[#dce4e5] bg-white px-2.5 text-xs font-normal text-[#192b35] outline-none focus:border-[#3987a3] disabled:bg-[#f4f7f5]" value={stopsText} onChange={(event) => setStopsText(event.target.value)} placeholder="Roosevelt, 35th Street" disabled /></label>
-                <label className="flex flex-col gap-1 text-[10px] font-semibold text-[#687780]">Assign vehicle<select className="h-9 rounded border border-[#dce4e5] bg-white px-2.5 text-xs font-normal text-[#192b35] outline-none focus:border-[#3987a3] disabled:bg-[#f4f7f5]" value={newVehicle} onChange={(event) => setNewVehicle(event.target.value)} disabled>{vehicles.map((option) => <option key={option}>{option}</option>)}</select></label>
-                <button className="mt-1 inline-flex h-10 items-center justify-center gap-2 rounded bg-[#126b91] px-3 text-xs font-semibold text-white hover:bg-[#0e5a7b] disabled:cursor-not-allowed disabled:opacity-60" title="Trip creation is not supported by the current dispatch API" disabled type="submit"><span className="material-symbols-outlined text-base">add</span>Create trip</button>
+                <label className="flex flex-col gap-1 text-[10px] font-semibold text-[#687780]">Route name<input className="h-9 rounded border border-[#dce4e5] bg-white px-2.5 text-xs font-normal text-[#192b35] outline-none focus:border-[#3987a3] disabled:bg-[#f4f7f5]" value={routeName} onChange={(event) => setRouteName(event.target.value)} placeholder="e.g. 34 South Michigan" required disabled={!dispatcher || creatingTrip} /></label>
+                <label className="flex flex-col gap-1 text-[10px] font-semibold text-[#687780]">Route short name<input className="h-9 rounded border border-[#dce4e5] bg-white px-2.5 text-xs font-normal text-[#192b35] outline-none focus:border-[#3987a3] disabled:bg-[#f4f7f5]" value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="e.g. 34" required disabled={!dispatcher || creatingTrip} /></label>
+                <label className="flex flex-col gap-1 text-[10px] font-semibold text-[#687780]">Service for today<select className="h-9 rounded border border-[#dce4e5] bg-white px-2.5 text-xs font-normal text-[#192b35] outline-none focus:border-[#3987a3] disabled:bg-[#f4f7f5]" value={serviceId} onChange={(event) => setServiceId(event.target.value)} required disabled={!dispatcher || creatingTrip || serviceIds.length === 0}><option value="">Select service</option>{serviceIds.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>
+                <label className="flex flex-col gap-1 text-[10px] font-semibold text-[#687780]">Assign vehicle<select className="h-9 rounded border border-[#dce4e5] bg-white px-2.5 text-xs font-normal text-[#192b35] outline-none focus:border-[#3987a3] disabled:bg-[#f4f7f5]" value={newVehicle} onChange={(event) => setNewVehicle(event.target.value)} required disabled={!dispatcher || creatingTrip || availableVehicles.length === 0}><option value="">Select available vehicle</option>{availableVehicles.map((vehicle) => <option key={vehicle.id} value={String(vehicle.id)}>{vehicle.label ?? `Vehicle #${vehicle.id}`}</option>)}</select></label>
+                <label className="flex flex-col gap-1 text-[10px] font-semibold text-[#687780]">First departure time<input className="h-9 rounded border border-[#dce4e5] bg-white px-2.5 text-xs font-normal text-[#192b35] outline-none focus:border-[#3987a3] disabled:bg-[#f4f7f5]" value={stopsText} onChange={(event) => setStopsText(event.target.value)} placeholder="08:00:00" disabled={!dispatcher || creatingTrip} /></label>
+                <div className="flex flex-col gap-1 text-[10px] font-semibold text-[#687780]">
+                  <label htmlFor="next-stop-picker">Add stops in travel order</label>
+                  <div className="flex gap-2">
+                    <select id="next-stop-picker" className="h-9 min-w-0 flex-1 rounded border border-[#dce4e5] bg-white px-2.5 text-xs font-normal text-[#192b35] outline-none focus:border-[#3987a3] disabled:bg-[#f4f7f5]" value={selectedStop} onChange={(event) => setSelectedStop(event.target.value)} disabled={!dispatcher || creatingTrip || availableNextStops.length === 0}>
+                      <option value="">Select a stop</option>
+                      {availableNextStops.map((stop) => <option key={stop.stop_id} value={stop.stop_id}>{stop.stop_name ?? stop.stop_desc ?? stop.stop_id}</option>)}
+                    </select>
+                    <button className="inline-flex size-9 shrink-0 items-center justify-center rounded border border-[#dce4e5] bg-white text-[#126b91] hover:bg-[#e7f2f5] disabled:cursor-not-allowed disabled:opacity-50" type="button" aria-label="Add stop" title="Add stop" onClick={handleAddStop} disabled={!dispatcher || creatingTrip || !selectedStop}><span className="material-symbols-outlined text-base">add</span></button>
+                  </div>
+                  {selectedStopIds.length > 0 && <ol className="m-0 mt-1 flex list-decimal flex-col gap-1 pl-5 text-xs font-normal text-[#192b35]">
+                    {selectedStopIds.map((stopId, index) => {
+                      const stop = formStops.find((option) => option.stop_id === stopId)
+                      return <li className="flex items-center justify-between gap-2" key={`${stopId}-${index}`}><span>{stop?.stop_name ?? stop?.stop_desc ?? stopId}</span><button className="rounded px-2 py-1 text-[10px] font-semibold text-[#a33c36] hover:bg-[#fcebea]" type="button" onClick={() => handleRemoveStopAt(index)} disabled={!dispatcher || creatingTrip}>Remove</button></li>
+                    })}
+                  </ol>}
+                </div>
+                <button className="mt-1 inline-flex h-10 items-center justify-center gap-2 rounded bg-[#126b91] px-3 text-xs font-semibold text-white hover:bg-[#0e5a7b] disabled:cursor-not-allowed disabled:opacity-60" disabled={!dispatcher || creatingTrip || !serviceId || !newVehicle || selectedStopIds.length === 0} type="submit"><span className="material-symbols-outlined text-base">add</span>{creatingTrip ? 'Creating...' : 'Create trip'}</button>
               </form>
             </section>
 

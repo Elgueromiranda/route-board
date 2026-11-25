@@ -167,6 +167,7 @@ function DispatchPage() {
   const [selectedStopIds, setSelectedStopIds] = useState<string[]>([])
   const [pickedStopIds, setPickedStopIds] = useState<string[]>([])
   const [creatingTrip, setCreatingTrip] = useState(false)
+  const [delayMinutesByTrip, setDelayMinutesByTrip] = useState<Record<string, string>>({})
 
   useEffect(() => {
     let active = true
@@ -345,17 +346,21 @@ function DispatchPage() {
     logEvent(`${trip.id} arrived at ${arrivedStop}.${completed ? ' Trip completed.' : ''}`, 'Stop arrival')
   }
 
-  async function updateStatus(trip: Trip, status: TripStatus) {
+  async function updateStatus(trip: Trip, status: TripStatus, delayMinutes = 5) {
     if (!dispatcher) return
     try {
       const eventType = status === 'Delayed' ? 'delayed' : status === 'Canceled' ? 'canceled' : null
       if (!eventType) return
+      if (eventType === 'delayed' && (!Number.isInteger(delayMinutes) || delayMinutes < 1 || delayMinutes > 1440)) {
+        setErrorMessage('Delay must be between 1 and 1440 minutes.')
+        return
+      }
 
       await apiRequest(`/api/v1/dispatch/trips/${encodeURIComponent(trip.id)}/events`, {
         method: 'POST',
         body: JSON.stringify({
           event_type: eventType,
-          ...(eventType === 'delayed' ? { delay_minutes: 5 } : {}),
+          ...(eventType === 'delayed' ? { delay_minutes: delayMinutes } : {}),
         }),
       })
 
@@ -495,7 +500,13 @@ function DispatchPage() {
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       {!trip.departed && !terminal && <button className="inline-flex items-center gap-1.5 rounded bg-[#126b91] px-3 py-2 text-[10px] font-semibold text-white hover:bg-[#0e5a7b]" type="button" onClick={() => recordDeparture(trip)}><span className="material-symbols-outlined text-sm">departure_board</span>Record departure</button>}
                       {trip.departed && !terminal && nextStop && <button className="inline-flex items-center gap-1.5 rounded bg-[#087a59] px-3 py-2 text-[10px] font-semibold text-white hover:bg-[#066447]" type="button" onClick={() => recordStopArrival(trip)}><span className="material-symbols-outlined text-sm">where_to_vote</span>Arrived: {nextStop}</button>}
-                      {!terminal && trip.status !== 'Delayed' && <button className="inline-flex items-center gap-1 rounded border border-[#ead9b5] bg-white px-3 py-2 text-[10px] font-semibold text-[#86601d] hover:bg-[#fff7e8]" type="button" onClick={() => updateStatus(trip, 'Delayed')}><span className="material-symbols-outlined text-sm">warning</span>Mark delayed</button>}
+                      {!terminal && trip.status !== 'Delayed' && <>
+                        <label className="flex items-center gap-1.5 text-[10px] font-semibold text-[#86601d]">Delay
+                          <input className="h-8 w-[68px] rounded border border-[#ead9b5] bg-white px-2 text-[11px] text-[#192b35] outline-none focus:border-[#c48a32]" aria-label={`Delay minutes for ${trip.id}`} type="number" min="1" max="1440" step="1" value={delayMinutesByTrip[trip.id] ?? '5'} onChange={(event) => setDelayMinutesByTrip((current) => ({ ...current, [trip.id]: event.target.value }))} disabled={!dispatcher} />
+                          <span className="font-normal">min</span>
+                        </label>
+                        <button className="inline-flex items-center gap-1 rounded border border-[#ead9b5] bg-white px-3 py-2 text-[10px] font-semibold text-[#86601d] hover:bg-[#fff7e8]" type="button" onClick={() => updateStatus(trip, 'Delayed', Number(delayMinutesByTrip[trip.id] ?? '5'))}><span className="material-symbols-outlined text-sm">warning</span>Mark delayed</button>
+                      </>}
                       {!terminal && <button className="inline-flex items-center gap-1 rounded border border-[#ecd1cf] bg-white px-3 py-2 text-[10px] font-semibold text-[#a33c36] hover:bg-[#fcebea]" type="button" onClick={() => updateStatus(trip, 'Canceled')}><span className="material-symbols-outlined text-sm">block</span>Cancel</button>}
                       {trip.status === 'Delayed' && !terminal && <button className="inline-flex items-center gap-1 rounded border border-[#b7e2cf] bg-white px-3 py-2 text-[10px] font-semibold text-[#087a59] hover:bg-[#e1f4eb]" type="button" onClick={() => clearDelay(trip)}><span className="material-symbols-outlined text-sm">check_circle</span>Clear delay</button>}
                     </div>

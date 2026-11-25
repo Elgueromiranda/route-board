@@ -110,6 +110,10 @@ function getVehicleLabel(shuttle: Shuttle) {
   return 'Not assigned'
 }
 
+function isShuttleDelayed(shuttle: Shuttle) {
+  return shuttle.delayed === true || shuttle.status?.toLowerCase() === 'delayed' || (shuttle.trip.delay_minutes ?? 0) > 0
+}
+
 /* ---------- live ETA from a given departure time ---------- */
 
 function etaFromTime(time: string | undefined, clock: Date) {
@@ -186,8 +190,8 @@ function Home() {
       const searchable =
         `${s.route_short_name ?? ''} ${s.route_long_name} ${finalStopDescription}`.toLowerCase()
       if (!searchable.includes(normalizedSearch)) return false
-      if (statusFilter === 'on_time') return !s.delayed
-      if (statusFilter === 'delayed') return !!s.delayed
+      if (statusFilter === 'on_time') return !isShuttleDelayed(s)
+      if (statusFilter === 'delayed') return isShuttleDelayed(s)
       return true
     })
   }, [shuttles, normalizedSearch, statusFilter])
@@ -437,7 +441,7 @@ function Home() {
                   ?? rowNext.departure_time
                 : undefined
               const eta = etaFromTime(rowEffective, clock)
-              const isDelayed = !!shuttle.delayed
+              const isDelayed = isShuttleDelayed(shuttle)
               const statusLabel = shuttle.status ?? (isDelayed ? 'delayed' : 'scheduled')
 
               return (
@@ -589,7 +593,7 @@ function Home() {
                   visibleStops.map((stop) => {
                     const times = stopTimes(stop)
                     const effective = times.effective
-                    const delayed = (selectedShuttle.trip.delay_minutes ?? 0) > 0
+                    const delayed = isShuttleDelayed(selectedShuttle)
                     const displayedTime = delayed && times.hasEstimate ? effective : times.scheduled
                     const countdownTarget = delayed && times.hasEstimate ? effective : times.scheduled
                     const scheduledDate = scheduleDate(countdownTarget, clock)
